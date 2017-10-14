@@ -39,9 +39,10 @@ def main():
 
     # Buffer space around the image
     buffer = 4
-    corner_radius = 12
-    line_width = 4
+    corner_radius = 15
+    line_width = 3
     padding = 15
+    box_w = 130
     
     # Draw the border line around the card
     border_w = width - 2 * buffer
@@ -51,7 +52,7 @@ def main():
     # Draw the header box for the text
     header_x = buffer + padding
     header_y = buffer
-    header_w = width * 6 / 8
+    header_w = width - box_w - (padding + buffer) * 2
     header_h = height / 10
     draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, corner_radius, line_width)
 
@@ -59,12 +60,12 @@ def main():
     imagebox_x = header_x
     imagebox_y = header_y + header_h + buffer + padding
     imagebox_w = header_w
-    imagebox_h = height * 3 / 5 - header_h
+    imagebox_h = height * 2 / 3 - header_h
     draw_rounded_rectangle(cr, imagebox_x, imagebox_y, imagebox_w, imagebox_h, corner_radius, line_width)
 
     # Draw the boxes on the right side of the card
     cr.save()
-    box_w = 120
+    box_w = 130
     box_h = ((imagebox_y + imagebox_h) - buffer) / 6
     cr.translate(width - buffer - box_w, buffer)
     draw_boxes(cr, box_w, box_h, 6, line_width)
