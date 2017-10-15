@@ -127,6 +127,13 @@ def main():
     draw_boxes(cr, line_width, boxes)
     cr.restore()
 
+    # Draw the description box at the bottom
+    descbox_x = imagebox_x
+    descbox_y = imagebox_y + imagebox_h + padding
+    descbox_w = width - (padding + buffer) * 2
+    descbox_h = height - descbox_y - padding
+    draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius, line_width)
+
     surface.write_to_png ("example.png") # Output to PNG
 
 main()
