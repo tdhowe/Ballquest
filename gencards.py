@@ -22,7 +22,7 @@ def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, ital
     cr.show_text(text)
     cr.restore()
 
-def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width):
+def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width, fill = False):
     radius = corner_radius;
     degrees = math.pi / 180.0;
 
@@ -33,9 +33,15 @@ def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width):
     cr.arc (width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
     cr.arc (radius, height - radius, radius, 90 * degrees, 180 * degrees)
     cr.arc (radius, radius, radius, 180 * degrees, 270 * degrees)
-    cr.set_source_rgb(0,0,0)
     cr.set_line_width (line_width)
-    cr.stroke()
+
+    if (fill):
+        cr.set_source_rgb(1.0, 1.0, 1.0)
+        cr.fill()
+    else:
+        cr.set_source_rgb(0,0,0)
+        cr.stroke()
+
     cr.restore()
 
 class StatBox:
@@ -75,33 +81,33 @@ def main():
     surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
     cr = cairo.Context (surface)
 
-    cr.set_source_rgb(1.0, 1.0, 1.0)
-    cr.rectangle (0, 0, width, height) # Rectangle(x0, y0, x1, y1)
-    cr.fill()
+    buffer = 4 # Thickness of the black line around the card
+    corner_radius = 15 # Radius of the rounded corners
+    line_width = 3 # Thickness of the lines
+    padding = 12 # Space between boxes
+    box_w = 130 # Width of the stat boxes on the right side of the card
 
-    # Buffer space around the image
-    buffer = 4
-    corner_radius = 15
-    line_width = 3
-    padding = 15
-    box_w = 130
+    # Fill the background with black
+    cr.set_source_rgb(0, 0, 0)
+    cr.rectangle (0, 0, width, height)
+    cr.fill()
     
     # Draw the border line around the card
     border_w = width - 2 * buffer
     border_h = height - 2 * buffer
-    draw_rounded_rectangle(cr, buffer, buffer, border_w, border_h, 0, line_width)
+    draw_rounded_rectangle(cr, buffer, buffer, border_w, border_h, 0, line_width, True)
     
     # Draw the header box for the text
-    header_x = buffer + padding
-    header_y = buffer
-    header_w = width - box_w - (padding + buffer) * 2
-    header_h = height / 10
+    header_x = padding
+    header_y = padding
+    header_w = width - box_w - padding * 2
+    header_h = height / 11
     draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, corner_radius, line_width)
     draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, "ASDEBVFXEWGRXCTED")
 
     # Draw the box that will hold the image
     imagebox_x = header_x
-    imagebox_y = header_y + header_h + buffer + padding
+    imagebox_y = header_y + header_h + padding
     imagebox_w = header_w
     imagebox_h = height * 2 / 3 - header_h
     draw_rounded_rectangle(cr, imagebox_x,  imagebox_y, imagebox_w, imagebox_h, corner_radius, line_width)
@@ -109,12 +115,12 @@ def main():
     # Draw the boxes on the right side of the card
     cr.save()
     box_w = 130
-    box_h = ((imagebox_y + imagebox_h) - buffer) / 6
-    cr.translate(width - buffer - box_w, buffer)
+    box_h = (imagebox_y + imagebox_h) / 6
+    cr.translate(width - box_w, 0)
 
     StatBox.box_width = box_w
     StatBox.box_height = box_h
-    StatBox.padding = padding
+    StatBox.padding = 20
 
     boxes = []
     boxes.append(StatBox("testheader1", "994"))
@@ -130,7 +136,7 @@ def main():
     # Draw the description box at the bottom
     descbox_x = imagebox_x
     descbox_y = imagebox_y + imagebox_h + padding
-    descbox_w = width - (padding + buffer) * 2
+    descbox_w = width - padding * 2
     descbox_h = height - descbox_y - padding
     draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius, line_width)
 
