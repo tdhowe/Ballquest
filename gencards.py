@@ -2,7 +2,19 @@ import math
 import cairo
 
 #def draw_shield(cr):
-    
+
+def draw_text(cr, x, y, font_size, text):
+    cr.save()
+
+    cr.translate(x, y)
+    cr.set_source_rgb(0,0,0)
+    cr.select_font_face("Wasco Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+    cr.set_font_size(font_size)
+    text_size = cr.text_extents(text)
+
+    cr.move_to(-text_size[2] / 2, text_size[3]/3)
+    cr.show_text(text)
+    cr.restore()
 
 def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width):
     radius = corner_radius;
@@ -55,13 +67,14 @@ def main():
     header_w = width - box_w - (padding + buffer) * 2
     header_h = height / 10
     draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, corner_radius, line_width)
+    draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, "ASDEBVFXEWGRXCTED")
 
     # Draw the box that will hold the image
     imagebox_x = header_x
     imagebox_y = header_y + header_h + buffer + padding
     imagebox_w = header_w
     imagebox_h = height * 2 / 3 - header_h
-    draw_rounded_rectangle(cr, imagebox_x, imagebox_y, imagebox_w, imagebox_h, corner_radius, line_width)
+    draw_rounded_rectangle(cr, imagebox_x,  imagebox_y, imagebox_w, imagebox_h, corner_radius, line_width)
 
     # Draw the boxes on the right side of the card
     cr.save()
