@@ -178,7 +178,7 @@ def main():
     ImagePanel.width = header_w
     ImagePanel.height = height * 2 / 3 - header_h
     ImagePanel.corner_radius = corner_radius
-    ImagePanel.shield_padding = buffer
+    ImagePanel.shield_padding = padding
     ImagePanel.line_width = line_width    
     
     imagebox_x = header_x
