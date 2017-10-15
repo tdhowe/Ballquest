@@ -3,16 +3,22 @@ import cairo
 
 #def draw_shield(cr):
 
-def draw_text(cr, x, y, font_size, text):
+def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, italic = False):
     cr.save()
-
     cr.translate(x, y)
     cr.set_source_rgb(0,0,0)
-    cr.select_font_face("Wasco Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+
+    slant = cairo.FONT_SLANT_ITALIC if italic else cairo.FONT_SLANT_NORMAL
+    weight = cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL
+
+    cr.select_font_face("Wasco Sans", slant, weight)
     cr.set_font_size(font_size)
     text_size = cr.text_extents(text)
 
-    cr.move_to(-text_size[2] / 2, text_size[3]/3)
+    text_x = 0;
+    if (horiz_center):
+        text_x = -text_size[2] / 2
+    cr.move_to(text_x, text_size[3]/3)
     cr.show_text(text)
     cr.restore()
 
@@ -32,12 +38,36 @@ def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width):
     cr.stroke()
     cr.restore()
 
-def draw_boxes(cr, width, height, box_count, line_width):
-    for box_num in range(box_count):
-        cr.rectangle(0, box_num * height, width, height)
+class StatBox:
+    box_width = 0
+    box_height = 0
+    padding = 0
+    header_font_size = 20
+    value_font_size = 32
+
+    def __init__(self, header_text, value_text):
+        self.header_text = header_text
+        self.value_text = value_text
+
+    def draw(self, cr, x, y, line_width):
+        # Draw the box outline first
+        cr.rectangle(x, y, StatBox.box_width, StatBox.box_height)
         cr.set_source_rgb(0,0,0)
         cr.set_line_width (line_width)
         cr.stroke()
+
+        # Now draw the header text
+        draw_text(cr, StatBox.box_width / 2, y + StatBox.padding, StatBox.header_font_size, self.header_text)
+
+        # Finally draw the value
+        draw_text(cr, StatBox.box_width / 2, y + StatBox.padding + StatBox.box_height / 2, StatBox.value_font_size, self.value_text)
+
+
+def draw_boxes(cr, line_width, boxes):
+    box_num = 0
+    for box in boxes:
+        box.draw(cr, 0, box_num * StatBox.box_height, line_width)
+        box_num += 1
 
 def main():
     width, height = 750, 1050
@@ -81,7 +111,20 @@ def main():
     box_w = 130
     box_h = ((imagebox_y + imagebox_h) - buffer) / 6
     cr.translate(width - buffer - box_w, buffer)
-    draw_boxes(cr, box_w, box_h, 6, line_width)
+
+    StatBox.box_width = box_w
+    StatBox.box_height = box_h
+    StatBox.padding = padding
+
+    boxes = []
+    boxes.append(StatBox("testheader1", "994"))
+    boxes.append(StatBox("testheader2", "995"))
+    boxes.append(StatBox("testheader3", "996"))
+    boxes.append(StatBox("testheader4", "997"))
+    boxes.append(StatBox("testheader5", "998"))
+    boxes.append(StatBox("testheader6", "999"))
+
+    draw_boxes(cr, line_width, boxes)
     cr.restore()
 
     surface.write_to_png ("example.png") # Output to PNG
