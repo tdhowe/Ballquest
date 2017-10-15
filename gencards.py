@@ -1,25 +1,76 @@
 import math
 import cairo
+from enum import Enum
 
-def draw_shield(cr, x, y, width, height):
-    cr.save()
+class Color(Enum):
+    BROWN = 0
+    BLUE = 1
+    RED = 2
+    PURPLE = 3
 
-    x = x + width / 2
-    y = y + height
+class ImagePanel:
+    shield_padding = 10 # Padding around the shield image
+    height = 0
+    width = 0
+    corner_radius = 0
+    line_width = 3
 
-    cr.translate(x, y)
-    cr.scale(width / 2, -height)
+    def __init__(self, color, image):
+        self.color = color
+        self.image = image
 
-    cr.move_to(0,0)
-    cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
-    cr.curve_to(0.7, 0.7, 0.35, 0.8, 0, 1)
-    cr.curve_to(-0.35, 0.8, -0.7, 0.7, -1, 0.75)
-    cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
-    cr.set_source_rgb(0, 0, 0)
-    cr.set_line_width(0.01)
-    cr.stroke()
+    def draw_shield(self, cr, x, y):
+        cr.save()
 
-    cr.restore()
+        width = ImagePanel.width - ImagePanel.shield_padding * 2
+        height = ImagePanel.height - ImagePanel.shield_padding * 2
+
+        x = x + width / 2 + ImagePanel.shield_padding
+        y = y + height + ImagePanel.shield_padding
+
+        # The coordinate space is defined as 0,0 at the center-bottom
+        # of the ImagePanel.  Positive Y is up (we invert the scale so this is the case).
+        # The bezier curve is determined by which color shield we are trying to draw.
+        cr.translate(x, y)
+        cr.scale(width / 2, -height)
+
+        # Fill with white, then draw the outline
+        for fill in [True, False]:
+            cr.move_to(0,0)
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
+            cr.curve_to(0.7, 0.7, 0.35, 0.8, 0, 1)
+            cr.curve_to(-0.35, 0.8, -0.7, 0.7, -1, 0.75)
+            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
+
+            if (fill):
+                cr.set_source_rgb(1, 1, 1)
+                cr.fill()
+            else:
+                cr.set_source_rgb(0, 0, 0)
+                cr.set_line_width(0.005)
+                cr.stroke()
+
+        cr.restore()
+
+    def draw(self, cr, x, y):
+        rgb = {
+            Color.BROWN : [1, 0.5, 0.5],
+            Color.BLUE : [1, 0.5, 0.5],
+            Color.RED : [1, 0.5, 0.5],
+            Color.PURPLE : [0.84, 0.72, 1.0]
+        }[self.color]
+
+        # Fill in the background
+        draw_rounded_rectangle(cr, x,  y, 
+            ImagePanel.width, ImagePanel.height, ImagePanel.corner_radius, ImagePanel.line_width,
+            True, rgb)
+        
+        # Draw the outline
+        draw_rounded_rectangle(cr, x,  y, 
+            ImagePanel.width, ImagePanel.height, ImagePanel.corner_radius, ImagePanel.line_width)
+
+        # draw the shield background
+        self.draw_shield(cr, x, y)
 
 def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, italic = False):
     cr.save()
@@ -40,7 +91,7 @@ def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, ital
     cr.show_text(text)
     cr.restore()
 
-def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width, fill = False):
+def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width, fill = False, fill_color = [1, 1, 1]):
     radius = corner_radius;
     degrees = math.pi / 180.0;
 
@@ -54,7 +105,7 @@ def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width, f
     cr.set_line_width (line_width)
 
     if (fill):
-        cr.set_source_rgb(1.0, 1.0, 1.0)
+        cr.set_source_rgb(fill_color[0], fill_color[1], fill_color[2])
         cr.fill()
     else:
         cr.set_source_rgb(0,0,0)
@@ -124,16 +175,23 @@ def main():
     draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, "ASDEBVFXEWGRXCTED")
 
     # Draw the box that will hold the image
+    ImagePanel.width = header_w
+    ImagePanel.height = height * 2 / 3 - header_h
+    ImagePanel.corner_radius = corner_radius
+    ImagePanel.shield_padding = buffer
+    ImagePanel.line_width = line_width    
+    
     imagebox_x = header_x
     imagebox_y = header_y + header_h + padding
-    imagebox_w = header_w
-    imagebox_h = height * 2 / 3 - header_h
-    draw_rounded_rectangle(cr, imagebox_x,  imagebox_y, imagebox_w, imagebox_h, corner_radius, line_width)
+
+    panel = ImagePanel(Color.PURPLE, "")
+    panel.draw(cr, imagebox_x, imagebox_y)
+
 
     # Draw the boxes on the right side of the card
     cr.save()
     box_w = 130
-    box_h = (imagebox_y + imagebox_h) / 6
+    box_h = (imagebox_y + ImagePanel.height) / 6
     cr.translate(width - box_w, 0)
 
     StatBox.box_width = box_w
@@ -153,12 +211,10 @@ def main():
 
     # Draw the description box at the bottom
     descbox_x = imagebox_x
-    descbox_y = imagebox_y + imagebox_h + padding
+    descbox_y = imagebox_y + ImagePanel.height + padding
     descbox_w = width - padding * 2
     descbox_h = height - descbox_y - padding
     draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius, line_width)
-
-    draw_shield(cr, imagebox_x + buffer, imagebox_y + buffer, imagebox_w - buffer * 2, imagebox_h - buffer * 2)
 
     surface.write_to_png ("example.png") # Output to PNG
 
