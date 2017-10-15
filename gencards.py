@@ -1,7 +1,25 @@
 import math
 import cairo
 
-#def draw_shield(cr):
+def draw_shield(cr, x, y, width, height):
+    cr.save()
+
+    x = x + width / 2
+    y = y + height
+
+    cr.translate(x, y)
+    cr.scale(width / 2, -height)
+
+    cr.move_to(0,0)
+    cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
+    cr.curve_to(0.7, 0.7, 0.35, 0.8, 0, 1)
+    cr.curve_to(-0.35, 0.8, -0.7, 0.7, -1, 0.75)
+    cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
+    cr.set_source_rgb(0, 0, 0)
+    cr.set_line_width(0.01)
+    cr.stroke()
+
+    cr.restore()
 
 def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, italic = False):
     cr.save()
@@ -139,6 +157,8 @@ def main():
     descbox_w = width - padding * 2
     descbox_h = height - descbox_y - padding
     draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius, line_width)
+
+    draw_shield(cr, imagebox_x + buffer, imagebox_y + buffer, imagebox_w - buffer * 2, imagebox_h - buffer * 2)
 
     surface.write_to_png ("example.png") # Output to PNG
 
