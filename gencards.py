@@ -19,6 +19,28 @@ class ImagePanel:
         self.color = color
         self.image = image
 
+    def __draw_shield_geometry(self, cr):
+        if (self.color is Color.BROWN):
+            cr.curve_to(.65, .15, 0.9, .6, 1, 0.95)
+            cr.line_to(-1, 0.95)
+            cr.curve_to(-0.9, .6, -.65, .15, 0, 0)
+        if (self.color is Color.RED):
+            cr.curve_to(.6, .1, 0.9, .5, 1, 1)
+            cr.curve_to(0.7, 0.9, 0.35, 0.9, 0, 1)
+            cr.curve_to(-0.35, 0.9, -0.7, 0.9, -1, 1)
+            cr.curve_to(-0.9, .5, -.6, .1, 0, 0)       
+        if (self.color is Color.BLUE):
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
+            cr.line_to(0.4, 1)
+            cr.line_to(-0.4, 1)
+            cr.line_to(-1, 0.75)
+            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
+        if (self.color is Color.PURPLE):
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
+            cr.curve_to(0.7, 0.7, 0.35, 0.8, 0, 1)
+            cr.curve_to(-0.35, 0.8, -0.7, 0.7, -1, 0.75)
+            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
+
     def draw_shield(self, cr, x, y):
         cr.save()
 
@@ -37,10 +59,8 @@ class ImagePanel:
         # Fill with white, then draw the outline
         for fill in [True, False]:
             cr.move_to(0,0)
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
-            cr.curve_to(0.7, 0.7, 0.35, 0.8, 0, 1)
-            cr.curve_to(-0.35, 0.8, -0.7, 0.7, -1, 0.75)
-            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
+
+            self.__draw_shield_geometry(cr)
 
             if (fill):
                 cr.set_source_rgb(1, 1, 1)
@@ -54,9 +74,9 @@ class ImagePanel:
 
     def draw(self, cr, x, y):
         rgb = {
-            Color.BROWN : [1, 0.5, 0.5],
-            Color.BLUE : [1, 0.5, 0.5],
-            Color.RED : [1, 0.5, 0.5],
+            Color.BROWN : [0.64, 0.5, 0.34],
+            Color.BLUE : [0.5, 0.7, 0.9],
+            Color.RED : [1, 0.61, 0.61],
             Color.PURPLE : [0.84, 0.72, 1.0]
         }[self.color]
 
@@ -184,7 +204,7 @@ def main():
     imagebox_x = header_x
     imagebox_y = header_y + header_h + padding
 
-    panel = ImagePanel(Color.PURPLE, "")
+    panel = ImagePanel(Color.BROWN, "")
     panel.draw(cr, imagebox_x, imagebox_y)
 
 
