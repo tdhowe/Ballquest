@@ -103,12 +103,17 @@ def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, ital
 
     cr.select_font_face("Wasco Sans", slant, weight)
     cr.set_font_size(font_size)
+
+    # Use text to get the drawn width
     text_size = cr.text_extents(text)
+
+    # Use font to make sure we are vertically centered
+    font_size = cr.font_extents()
 
     text_x = 0;
     if (horiz_center):
         text_x = -text_size[2] / 2
-    cr.move_to(text_x, text_size[3]/3)
+    cr.move_to(text_x, font_size[2]/4)
     cr.show_text(text)
     cr.restore()
 
@@ -138,8 +143,8 @@ class StatBox:
     box_width = 0
     box_height = 0
     padding = 0
-    header_font_size = 20
-    value_font_size = 32
+    header_font_size = 24
+    value_font_size = 40
 
     def __init__(self, header_text, value_text):
         self.header_text = header_text
@@ -168,10 +173,9 @@ class Card:
     box_w = 130 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
 
-    def __init__(self, name, description, color, image):
+    def __init__(self, name, color, image):
         self.stats = []
         self.name = name
-        self.description = description
         self.imagebox = ImagePanel(color, image)
 
     def __draw_boxes(self, cr):
@@ -180,9 +184,19 @@ class Card:
             box.draw(cr, 0, box_num * StatBox.box_height, Card.line_width)
             box_num += 1
 
+    # Add a stat with the given name (such as "Price") and value (such as "3")
     def add_stat(self, name, value):
         self.stats.append(StatBox(name, value))
 
+    # Set the description text
+    def set_text(self, text):
+        self.text = text
+    
+    # Set the flavor text (shown in italics below the description)
+    def set_flavor_tet(self, flavor_text):
+        self.flavor_text = flavor_text
+
+    # Generate the card in the output folder based on current settings
     def create_card(self,):
         w = Card.width
         h = Card.height
@@ -199,7 +213,7 @@ class Card:
         # Draw the border line around the card
         border_w = w - 2 * Card.buffer
         border_h = h - 2 * Card.buffer
-        draw_rounded_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, 0, Card.line_width, True)
+        draw_rounded_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, 2, Card.line_width, True)
         
         # Draw the header box for the text
         header_x = Card.padding
@@ -207,7 +221,7 @@ class Card:
         header_w = w - box_w - Card.padding * 2
         header_h = h / 11
         draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, Card.corner_radius, Card.line_width)
-        draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, self.name)
+        draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, self.name, bold = True)
            
         # Set up layout for all image panels
         ImagePanel.width = header_w
@@ -246,10 +260,14 @@ class Card:
 
 
 def main():
-    brown_card = Card("Test Brown Card", "This is a brown card for testing. Lorem Ipsum Sin Dolor", Color.BROWN, "")
-    red_card = Card("Test Red Card", "This is a red card for testing. Lorem Ipsum Sin Dolor", Color.RED, "")
-    blue_card = Card("Test Blue Card", "This is a blue card for testing. Lorem Ipsum Sin Dolor", Color.BLUE, "")
-    purple_card = Card("Test Purple Card", "This is a purple card for testing. Lorem Ipsum Sin Dolor", Color.PURPLE, "")
+    brown_card = Card("Test Brown Card", Color.BROWN, "")
+    red_card = Card("Test Red Card", Color.RED, "")
+    blue_card = Card("Test Blue Card", Color.BLUE, "")
+    purple_card = Card("Test Purple Card", Color.PURPLE, "")
+
+    brown_card.set_text("Destroy this: Deal 10m damage.")
+    brown_card.set_text("Ranged: Damage from this is dealt after the next player's turn.")
+    brown_card.set_text("Take aim: Damage from this is dealt after the next player's turn.")
 
     brown_card.add_stat("Price", "2")
     red_card.add_stat("Price", "3")
