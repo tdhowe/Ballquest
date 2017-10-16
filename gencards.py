@@ -22,25 +22,24 @@ class ImagePanel:
     # Shield Geometry is dependent on color
     def __draw_shield_geometry(self, cr):
         if (self.color is Color.BROWN):
-            cr.curve_to(.65, .15, 0.9, .6, 1, 0.97)
-            cr.line_to(0, 0.9)
-            cr.line_to(-1, 0.97)
-            cr.curve_to(-0.9, .6, -.65, .15, 0, 0)
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.85)
+            cr.curve_to(0.4, 1.04, -0.4, 1.04, -1, 0.85)
+            cr.curve_to(-0.9, .4, -.55, .1, 0, 0) 
         if (self.color is Color.RED):
-            cr.curve_to(.6, .1, 0.9, .5, 1, 1)
-            cr.curve_to(0.7, 0.9, 0.35, 0.9, 0, 1)
-            cr.curve_to(-0.35, 0.9, -0.7, 0.9, -1, 1)
-            cr.curve_to(-0.9, .5, -.6, .1, 0, 0)       
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.97)
+            cr.line_to(0, 0.85)
+            cr.line_to(-1, 0.97)
+            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
         if (self.color is Color.BLUE):
             cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
-            cr.line_to(0.4, 1)
+            cr.curve_to(0.75, 0.8, 0.6, 0.86, 0.4, 1)
             cr.line_to(-0.4, 1)
-            cr.line_to(-1, 0.75)
+            cr.curve_to(-0.6, 0.86, -0.75, 0.8, -1, 0.75)
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
         if (self.color is Color.PURPLE):
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.8)
-            cr.curve_to(0.7, 0.75, 0.35, 0.8, 0, 1)
-            cr.curve_to(-0.35, 0.8, -0.7, 0.75, -1, 0.8)
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.85)
+            cr.curve_to(0.72, 0.8, 0.33, 0.85, 0, 1)
+            cr.curve_to(-0.353, 0.85, -0.72, 0.8, -1, 0.85)
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
 
     def draw_shield(self, cr, x, y):
