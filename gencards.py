@@ -165,6 +165,7 @@ class Card:
     line_width = 3 # Thickness of the lines
     padding = 12 # Space between boxes
     box_w = 130 # Width of the stat boxes on the right side of the card
+    out_folder = "gen/"
 
     def __init__(self, name, description, color, image):
         self.stats = []
@@ -182,8 +183,6 @@ class Card:
         self.stats.append(StatBox(name, value))
 
     def create_card(self,):
-        output_name = self.name.replace(" ", "_") + ".png"
-
         w = Card.width
         h = Card.height
         box_w = 130
@@ -239,6 +238,8 @@ class Card:
         descbox_h = h - descbox_y - Card.padding
         draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, Card.corner_radius, Card.line_width)
 
+
+        output_name = Card.out_folder + self.name.replace(" ", "_") + ".png"
         # Write to output
         surface.write_to_png(output_name)
 
