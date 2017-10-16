@@ -157,85 +157,132 @@ class StatBox:
         # Finally draw the value
         draw_text(cr, StatBox.box_width / 2, y + StatBox.padding + StatBox.box_height / 2, StatBox.value_font_size, self.value_text)
 
-
-def draw_boxes(cr, line_width, boxes):
-    box_num = 0
-    for box in boxes:
-        box.draw(cr, 0, box_num * StatBox.box_height, line_width)
-        box_num += 1
-
-def main():
-    width, height = 750, 1050
-
-    surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
-    cr = cairo.Context (surface)
-
+class Card:
+    width = 750 # Width of the card
+    height = 1050 # Height of the card
     buffer = 4 # Thickness of the black line around the card
     corner_radius = 15 # Radius of the rounded corners
     line_width = 3 # Thickness of the lines
     padding = 12 # Space between boxes
     box_w = 130 # Width of the stat boxes on the right side of the card
 
-    # Fill the background with black
-    cr.set_source_rgb(0, 0, 0)
-    cr.rectangle (0, 0, width, height)
-    cr.fill()
+    def __init__(self, name, description, color, image):
+        self.stats = []
+        self.name = name
+        self.description = description
+        self.imagebox = ImagePanel(color, image)
+
+    def __draw_boxes(self, cr):
+        box_num = 0
+        for box in self.stats:
+            box.draw(cr, 0, box_num * StatBox.box_height, Card.line_width)
+            box_num += 1
+
+    def add_stat(self, name, value):
+        self.stats.append(StatBox(name, value))
+
+    def create_card(self,):
+        output_name = self.name.replace(" ", "_") + ".png"
+
+        w = Card.width
+        h = Card.height
+        box_w = 130
+
+        surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, w, h)
+        cr = cairo.Context (surface)
+
+        # Fill the background with black
+        cr.set_source_rgb(0, 0, 0)
+        cr.rectangle (0, 0, w, h)
+        cr.fill()
+
+        # Draw the border line around the card
+        border_w = w - 2 * Card.buffer
+        border_h = h - 2 * Card.buffer
+        draw_rounded_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, 0, Card.line_width, True)
+        
+        # Draw the header box for the text
+        header_x = Card.padding
+        header_y = Card.padding
+        header_w = w - box_w - Card.padding * 2
+        header_h = h / 11
+        draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, Card.corner_radius, Card.line_width)
+        draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, self.name)
+           
+        # Set up layout for all image panels
+        ImagePanel.width = header_w
+        ImagePanel.height = h * 2 / 3 - header_h
+        ImagePanel.corner_radius = Card.corner_radius
+        ImagePanel.shield_padding = Card.padding
+        ImagePanel.line_width = Card.line_width    
+        
+        imagebox_x = header_x
+        imagebox_y = header_y + header_h + Card.padding
+        self.imagebox.draw(cr, imagebox_x, imagebox_y)
+        
+        # Draw the boxes on the right side of the card
+        cr.save()
+        box_h = (imagebox_y + ImagePanel.height) / 6
+        cr.translate(w - box_w, 0)
+
+        StatBox.box_width = box_w
+        StatBox.box_height = box_h
+        StatBox.padding = 20
+
+        self.__draw_boxes(cr)
+        cr.restore()
+
+        # Draw the description box at the bottom
+        descbox_x = imagebox_x
+        descbox_y = imagebox_y + ImagePanel.height + Card.padding
+        descbox_w = w - Card.padding * 2
+        descbox_h = h - descbox_y - Card.padding
+        draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, Card.corner_radius, Card.line_width)
+
+        # Write to output
+        surface.write_to_png(output_name)
+
+
+def main():
+    brown_card = Card("Test Brown Card", "This is a brown card for testing. Lorem Ipsum Sin Dolor", Color.BROWN, "")
+    red_card = Card("Test Red Card", "This is a red card for testing. Lorem Ipsum Sin Dolor", Color.RED, "")
+    blue_card = Card("Test Blue Card", "This is a blue card for testing. Lorem Ipsum Sin Dolor", Color.BLUE, "")
+    purple_card = Card("Test Purple Card", "This is a purple card for testing. Lorem Ipsum Sin Dolor", Color.PURPLE, "")
+
+    brown_card.add_stat("Price", "2")
+    red_card.add_stat("Price", "3")
+    blue_card.add_stat("Price", "3")
+    purple_card.add_stat("Price", "4")
+
+    brown_card.add_stat("Appeal", "-4")
+    red_card.add_stat("Appeal", "3")
+    blue_card.add_stat("Appeal", "3")
+    purple_card.add_stat("Appeal", "4")
+
+    brown_card.add_stat("Priority", "0")
+    red_card.add_stat("Priority", "2")
+    blue_card.add_stat("Priority", "2")
+    purple_card.add_stat("Priority", "-3")
+
+    brown_card.add_stat("HP", "8")
+    red_card.add_stat("HP", "6")
+    blue_card.add_stat("HP", "6")
+    purple_card.add_stat("HP", "4")
     
-    # Draw the border line around the card
-    border_w = width - 2 * buffer
-    border_h = height - 2 * buffer
-    draw_rounded_rectangle(cr, buffer, buffer, border_w, border_h, 0, line_width, True)
-    
-    # Draw the header box for the text
-    header_x = padding
-    header_y = padding
-    header_w = width - box_w - padding * 2
-    header_h = height / 11
-    draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, corner_radius, line_width)
-    draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, "ASDEBVFXEWGRXCTED")
+    brown_card.add_stat("Damage", "2s")
+    red_card.add_stat("Damage", "6b")
+    blue_card.add_stat("Damage", "6s/4b")
+    purple_card.add_stat("Damage", "4m")
 
-    # Draw the box that will hold the image
-    ImagePanel.width = header_w
-    ImagePanel.height = height * 2 / 3 - header_h
-    ImagePanel.corner_radius = corner_radius
-    ImagePanel.shield_padding = padding
-    ImagePanel.line_width = line_width    
-    
-    imagebox_x = header_x
-    imagebox_y = header_y + header_h + padding
+    brown_card.add_stat("Capacity", "1")
+    red_card.add_stat("Capacity", "2")
+    blue_card.add_stat("Capacity", "3")
+    purple_card.add_stat("Capacity", "4")
 
-    panel = ImagePanel(Color.BROWN, "")
-    panel.draw(cr, imagebox_x, imagebox_y)
+    brown_card.create_card();
+    red_card.create_card();
+    blue_card.create_card();
+    purple_card.create_card();
 
-
-    # Draw the boxes on the right side of the card
-    cr.save()
-    box_w = 130
-    box_h = (imagebox_y + ImagePanel.height) / 6
-    cr.translate(width - box_w, 0)
-
-    StatBox.box_width = box_w
-    StatBox.box_height = box_h
-    StatBox.padding = 20
-
-    boxes = []
-    boxes.append(StatBox("testheader1", "994"))
-    boxes.append(StatBox("testheader2", "995"))
-    boxes.append(StatBox("testheader3", "996"))
-    boxes.append(StatBox("testheader4", "997"))
-    boxes.append(StatBox("testheader5", "998"))
-    boxes.append(StatBox("testheader6", "999"))
-
-    draw_boxes(cr, line_width, boxes)
-    cr.restore()
-
-    # Draw the description box at the bottom
-    descbox_x = imagebox_x
-    descbox_y = imagebox_y + ImagePanel.height + padding
-    descbox_w = width - padding * 2
-    descbox_h = height - descbox_y - padding
-    draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius, line_width)
-
-    surface.write_to_png ("example.png") # Output to PNG
 
 main()
