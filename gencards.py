@@ -22,8 +22,8 @@ class ImagePanel:
     # Shield Geometry is dependent on color
     def __draw_shield_geometry(self, cr):
         if (self.color is Color.BROWN):
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.85)
-            cr.curve_to(0.4, 1.04, -0.4, 1.04, -1, 0.85)
+            cr.curve_to(.55, .1, 0.9, .4, 1, 0.83)
+            cr.curve_to(0.4, 1.04, -0.4, 1.04, -1, 0.83)
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0) 
         if (self.color is Color.RED):
             cr.curve_to(.55, .1, 0.9, .4, 1, 0.97)
@@ -32,9 +32,11 @@ class ImagePanel:
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
         if (self.color is Color.BLUE):
             cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
-            cr.curve_to(0.75, 0.8, 0.6, 0.86, 0.4, 1)
+            cr.line_to(0.4, 1)
+            #cr.curve_to(0.75, 0.8, 0.6, 0.86, 0.4, 1)
             cr.line_to(-0.4, 1)
-            cr.curve_to(-0.6, 0.86, -0.75, 0.8, -1, 0.75)
+            #cr.curve_to(-0.6, 0.86, -0.75, 0.8, -1, 0.75)     
+            cr.line_to(-1, 0.75)
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
         if (self.color is Color.PURPLE):
             cr.curve_to(.55, .1, 0.9, .4, 1, 0.85)
@@ -177,12 +179,26 @@ class Card:
         self.stats = []
         self.name = name
         self.imagebox = ImagePanel(color, image)
+        self.text = ""
+        self.flavor_text = ""
 
     def __draw_boxes(self, cr):
         box_num = 0
         for box in self.stats:
             box.draw(cr, 0, box_num * StatBox.box_height, Card.line_width)
             box_num += 1
+
+    def __draw_description_text(self, cr):
+        text = self.text
+        flavor = self.flavor_text
+        if (text is not ""):
+            if (":" in text):
+                keyword, desc = text.split(":")
+                desc = desc.strip()
+                print (keyword)
+        if (flavor is not ""):
+            print (flavor)
+
 
     # Add a stat with the given name (such as "Price") and value (such as "3")
     def add_stat(self, name, value):
@@ -253,6 +269,9 @@ class Card:
         descbox_h = h - descbox_y - Card.padding
         draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, Card.corner_radius, Card.line_width)
 
+        # Move to the upper left corner where the text will start
+        cr.translate(descbox_x + Card.padding, descbox_y + Card.padding)
+        self.__draw_description_text(cr)
 
         output_name = Card.out_folder + self.name.replace(" ", "_") + ".png"
         # Write to output
@@ -266,8 +285,10 @@ def main():
     purple_card = Card("Test Purple Card", Color.PURPLE, "")
 
     brown_card.set_text("Destroy this: Deal 10m damage.")
-    brown_card.set_text("Ranged: Damage from this is dealt after the next player's turn.")
-    brown_card.set_text("Take aim: Damage from this is dealt after the next player's turn.")
+    red_card.set_text("Ranged: Damage from this is dealt after the next player's turn.")
+    blue_card.set_flavor_tet("This item comes from the witch of dag'raba in the fallen swamp.")
+    purple_card.set_text("When destroyed: Each player must give you an item.")
+    purple_card.set_flavor_tet("\"It's good to be king.\" - Tom Petty")
 
     brown_card.add_stat("Price", "2")
     red_card.add_stat("Price", "3")
