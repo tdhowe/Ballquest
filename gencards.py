@@ -95,44 +95,87 @@ class ImagePanel:
         # draw the shield background
         self.draw_shield(cr, x, y)
 
-def draw_text(cr, x, y, font_size, text, horiz_center = True, bold = False, italic = False):
-    cr.save()
-    cr.translate(x, y)
-    cr.set_source_rgb(0,0,0)
+class TextRegion:
 
-    slant = cairo.FONT_SLANT_ITALIC if italic else cairo.FONT_SLANT_NORMAL
-    weight = cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL
+    # A text region is defined from the upper-left corner of the box with a given width and height
+    # Words will automatically wrap around the width
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.font = "Wasco Sans"
+        self.bold = False
+        self.italic = False
+        self.horizontal_center = False
+        self.vertical_center = False
+        self.__last_pos = [x, y]
 
-    cr.select_font_face("Wasco Sans", slant, weight)
-    cr.set_font_size(font_size)
+    # Draw the text with the configured font.  If centered is set to true,
+    # no wrapping will be done, and the text will be drawn centered
+    # horizontally and vertically within the region.
+    def draw_text(self, cr, text, font_size=20):
+        cr.save()
 
-    # Use text to get the drawn width
-    text_size = cr.text_extents(text)
+        # Set up the look of the text
+        slant = cairo.FONT_SLANT_ITALIC if self.italic else cairo.FONT_SLANT_NORMAL
+        weight = cairo.FONT_WEIGHT_BOLD if self.bold else cairo.FONT_WEIGHT_NORMAL
+        cr.select_font_face(self.font, slant, weight)
+        cr.set_font_size(font_size)
+        cr.set_source_rgb(0, 0, 0)
 
-    # Use font to make sure we are vertically centered
-    font_size = cr.font_extents()
+        x = self.__last_pos[0]
+        y = self.__last_pos[1]
 
-    text_x = 0;
-    if (horiz_center):
-        text_x = -text_size[2] / 2
-    cr.move_to(text_x, font_size[2]/4)
-    cr.show_text(text)
-    cr.restore()
+        # Use text to get the drawn width
+        text_size = cr.text_extents(text)
+
+        # Use font to make sure we are vertically centered
+        font_size = cr.font_extents()
+
+        if self.horizontal_center:
+            x = (x + self.x + self.width) / 2 - text_size.x_advance / 2
+        if self.vertical_center:
+            y = (y + self.y + self.height) / 2
+
+        y += font_size[2] / 4
+
+        # Move to the to the start of the text string
+        cr.move_to(x, y)
+
+        # Split into words so we can wrap around the box if needed
+        for word in text.split(' '):
+            text_size = cr.text_extents(word)
+
+        cr.show_text(text)
+
+        curx, cury = cr.get_current_point()
+        if self.horizontal_center: x = self.x
+        else: x = curx
+
+        if not self.vertical_center:
+            # Update the y location for the next write
+            y = cury + font_size[3] * 1.05
+
+        self.__last_pos[0] = x
+        self.__last_pos[1] = y
+
+        cr.restore()
 
 def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width, fill = False, fill_color = [1, 1, 1]):
-    radius = corner_radius;
-    degrees = math.pi / 180.0;
+    radius = corner_radius
+    degrees = math.pi / 180.0
 
     cr.save()
     cr.translate(x, y)
     cr.move_to(radius, 0)
-    cr.arc (width - radius, radius, radius, -90 * degrees, 0 * degrees)
-    cr.arc (width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
-    cr.arc (radius, height - radius, radius, 90 * degrees, 180 * degrees)
-    cr.arc (radius, radius, radius, 180 * degrees, 270 * degrees)
-    cr.set_line_width (line_width)
+    cr.arc(width - radius, radius, radius, -90 * degrees, 0 * degrees)
+    cr.arc(width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
+    cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
+    cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
+    cr.set_line_width(line_width)
 
-    if (fill):
+    if fill:
         cr.set_source_rgb(fill_color[0], fill_color[1], fill_color[2])
         cr.fill()
     else:
@@ -146,24 +189,34 @@ class StatBox:
     box_height = 0
     padding = 0
     header_font_size = 24
-    value_font_size = 40
+    value_font_size = 36
 
     def __init__(self, header_text, value_text):
         self.header_text = header_text
         self.value_text = value_text
 
     def draw(self, cr, x, y, line_width):
+        pad = self.padding
+
+        text_region = TextRegion(x + pad, y + pad, StatBox.box_width - pad * 2, StatBox.box_height - pad * 2)
+
         # Draw the box outline first
         cr.rectangle(x, y, StatBox.box_width, StatBox.box_height)
         cr.set_source_rgb(0,0,0)
         cr.set_line_width (line_width)
         cr.stroke()
 
+        text_region.horizontal_center = True
+
         # Now draw the header text
-        draw_text(cr, StatBox.box_width / 2, y + StatBox.padding, StatBox.header_font_size, self.header_text)
+        text_region.bold = True
+        text_region.vertical_center = False
+        text_region.draw_text(cr, self.header_text, self.header_font_size)
 
         # Finally draw the value
-        draw_text(cr, StatBox.box_width / 2, y + StatBox.padding + StatBox.box_height / 2, StatBox.value_font_size, self.value_text)
+        text_region.bold = False
+        text_region.vertical_center = True
+        text_region.draw_text(cr, self.value_text, self.value_font_size)
 
 class Card:
     width = 750 # Width of the card
@@ -189,13 +242,17 @@ class Card:
             box_num += 1
 
     def __draw_description_text(self, cr):
+        font_size = 36
         text = self.text
         flavor = self.flavor_text
         if (text is not ""):
             if (":" in text):
                 keyword, desc = text.split(":")
-                desc = desc.strip()
-                print (keyword)
+                keyword = keyword.strip()
+                desc = desc.strip() + ": "
+
+                #draw_text(cr, 0, 0, font_size, keyword, False, True)
+                
         if (flavor is not ""):
             print (flavor)
 
@@ -237,7 +294,12 @@ class Card:
         header_w = w - box_w - Card.padding * 2
         header_h = h / 11
         draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, Card.corner_radius, Card.line_width)
-        draw_text(cr, header_x + header_w / 2, header_y + header_h / 2, 42, self.name, bold = True)
+
+        header_txt = TextRegion(header_x, header_y, header_w, header_h)
+        header_txt.bold = True
+        header_txt.vertical_center = True
+        header_txt.horizontal_center = True
+        header_txt.draw_text(cr, self.name, 42)
            
         # Set up layout for all image panels
         ImagePanel.width = header_w
