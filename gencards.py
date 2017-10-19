@@ -141,7 +141,7 @@ class TextRegion:
         self.y = y
         self.width = width
         self.height = height
-        self.font = "Wasco Sans"
+        self.font = "Constantia"
         self.bold = False
         self.italic = False
         self.horizontal_center = False
@@ -261,9 +261,7 @@ class StatBox:
 
     def draw(self, cr, x, y, line_width):
         pad = self.padding
-
         text_region = TextRegion(x + pad, y + pad, StatBox.box_width - pad * 2, StatBox.box_height - pad * 2)
-
 
         # Draw the box outline first
         cr.rectangle(x, y, StatBox.box_width, StatBox.box_height)
@@ -271,10 +269,9 @@ class StatBox:
         cr.set_line_width (line_width)
         cr.stroke()
 
-        text_region.horizontal_center = True
-
         # Now draw the header text
         text_region.bold = True
+        text_region.horizontal_center = True
         text_region.vertical_center = False        
         text_region.fontsize = self.header_font_size
         text_region.draw_text(cr, self.header_text)
@@ -314,7 +311,7 @@ class Card:
         text = self.text
         flavor = self.flavor_text
 
-        text_region = TextRegion(x + padding, y + padding, width - padding * 2, height - padding * 2)
+        text_region = TextRegion(x + padding, y + padding * 2, width - padding * 2, height - padding * 3)
         text_region.fontsize = font_size
 
         if (text is not ""):
@@ -333,6 +330,7 @@ class Card:
                 
         if (flavor is not ""):
             text_region.italic = True
+            text_region.fontsize = 30
             text_region.draw_text(cr, flavor)
 
 
