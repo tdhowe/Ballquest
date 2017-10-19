@@ -197,7 +197,6 @@ class TextRegion:
         font_size = cr.font_extents()
 
         y_centering = font_size[2] / 4
-
         y += y_centering
 
         # Split into words so we can wrap around the box if needed
@@ -231,7 +230,8 @@ class TextRegion:
         if self.vertical_center:
             y = (y + self.y + self.height) / 2
         
-        y += font_size[2] / 4        
+        y_centering = font_size[2] / 4
+        y += y_centering  
         
         # Move to the to the start of the text string
         cr.move_to(x, y)            
@@ -243,10 +243,10 @@ class TextRegion:
 
         if not self.vertical_center:
             # Update the y location for the next write
-            y = cury + font_size[3] * 1.05
+            y = cury + font_size[2]
 
         self.__last_pos[0] = x
-        self.__last_pos[1] = y
+        self.__last_pos[1] = y - y_centering
 
 class StatBox:
     box_width = 0
