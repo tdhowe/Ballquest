@@ -147,6 +147,7 @@ class TextRegion:
         self.horizontal_center = False
         self.vertical_center = False
         self.__last_pos = [x, y]
+        self.fontsize = 20
 
     def new_line(self, cr):
         if self.horizontal_center or self.vertical_center: return
@@ -158,22 +159,24 @@ class TextRegion:
 
         x = self.x
         y = self.__last_pos[1] + font_size[2] * 5 / 4
+
+        self.__last_pos = [x, y]
         return x, y
 
-    def __set_font(self, cr, fontsize = 0):
+    def __set_font(self, cr):
         # Set up the look of the text
         slant = cairo.FONT_SLANT_ITALIC if self.italic else cairo.FONT_SLANT_NORMAL
         weight = cairo.FONT_WEIGHT_BOLD if self.bold else cairo.FONT_WEIGHT_NORMAL
         cr.select_font_face(self.font, slant, weight)
-        if fontsize > 0: cr.set_font_size(fontsize)
+        cr.set_font_size(self.fontsize)
         cr.set_source_rgb(0, 0, 0)
 
     # Draw the text with the configured font.  If centered is set to true,
     # no wrapping will be done, and the text will be drawn centered
     # horizontally and vertically within the region.
-    def draw_text(self, cr, text, fontsize=20):
+    def draw_text(self, cr, text):
         cr.save()
-        self.__set_font(cr, fontsize)
+        self.__set_font(cr)
 
         if self.vertical_center or self.horizontal_center:
             self.__draw_text_centered(cr, text)
@@ -193,22 +196,24 @@ class TextRegion:
         # Use font to make sure we are vertically centered
         font_size = cr.font_extents()
 
-        y += font_size[2] / 4
+        y_centering = font_size[2] / 4
+
+        y += y_centering
 
         # Split into words so we can wrap around the box if needed
         for word in text.split(' '):
-            cr.move_to(x, y)
             word_size = cr.text_extents(word)
 
             if x + word_size.x_advance > self.x + self.width:
                 # Word will need to be wrapped
                 x, y = self.new_line(cr)
             
+            cr.move_to(x, y)
             cr.show_text(word + " ")
             x, y = cr.get_current_point()
 
         self.__last_pos[0] = x
-        self.__last_pos[1] = y
+        self.__last_pos[1] = y - y_centering
     
     def __draw_text_centered(self, cr, text):
 
@@ -259,6 +264,7 @@ class StatBox:
 
         text_region = TextRegion(x + pad, y + pad, StatBox.box_width - pad * 2, StatBox.box_height - pad * 2)
 
+
         # Draw the box outline first
         cr.rectangle(x, y, StatBox.box_width, StatBox.box_height)
         cr.set_source_rgb(0,0,0)
@@ -269,13 +275,15 @@ class StatBox:
 
         # Now draw the header text
         text_region.bold = True
-        text_region.vertical_center = False
-        text_region.draw_text(cr, self.header_text, self.header_font_size)
+        text_region.vertical_center = False        
+        text_region.fontsize = self.header_font_size
+        text_region.draw_text(cr, self.header_text)
 
         # Finally draw the value
         text_region.bold = False
         text_region.vertical_center = True
-        text_region.draw_text(cr, self.value_text, self.value_font_size)
+        text_region.fontsize = self.value_font_size
+        text_region.draw_text(cr, self.value_text)
 
 class Card:
     width = 750 # Width of the card
@@ -307,6 +315,7 @@ class Card:
         flavor = self.flavor_text
 
         text_region = TextRegion(x + padding, y + padding, width - padding * 2, height - padding * 2)
+        text_region.fontsize = font_size
 
         if (text is not ""):
             if (":" in text):
@@ -315,16 +324,16 @@ class Card:
                 desc = desc.strip()
 
                 text_region.bold = True
-                text_region.draw_text(cr, keyword, font_size)
+                text_region.draw_text(cr, keyword)
 
                 text_region.bold = False
-                text_region.draw_text(cr, desc, font_size)
+                text_region.draw_text(cr, desc)
             
-            text_region.new_line(cr)
+        text_region.new_line(cr)
                 
         if (flavor is not ""):
             text_region.italic = True
-            text_region.draw_text(cr, flavor, font_size)
+            text_region.draw_text(cr, flavor)
 
 
     # Add a stat with the given name (such as "Price") and value (such as "3")
@@ -369,7 +378,8 @@ class Card:
         header_txt.bold = True
         header_txt.vertical_center = True
         header_txt.horizontal_center = True
-        header_txt.draw_text(cr, self.name, 42)
+        header_txt.fontsize = 42
+        header_txt.draw_text(cr, self.name)
            
         # Set up layout for all image panels
         ImagePanel.width = header_w
