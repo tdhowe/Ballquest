@@ -84,13 +84,15 @@ class ImagePanel:
         }[self.color]
 
         # Fill in the background
-        draw_rounded_rectangle(cr, x,  y, 
-            ImagePanel.width, ImagePanel.height, ImagePanel.corner_radius, ImagePanel.line_width,
-            True, rgb)
+        draw_rectangle(cr, x,  y, 
+            ImagePanel.width, ImagePanel.height, 
+            corner_radius = ImagePanel.corner_radius, line_width = ImagePanel.line_width,
+            fill = True, fill_color = rgb)
         
         # Draw the outline
-        draw_rounded_rectangle(cr, x,  y, 
-            ImagePanel.width, ImagePanel.height, ImagePanel.corner_radius, ImagePanel.line_width)
+        draw_rectangle(cr, x,  y, 
+            ImagePanel.width, ImagePanel.height, 
+            corner_radius = ImagePanel.corner_radius, line_width = ImagePanel.line_width)
 
         # draw the shield background
         self.draw_shield(cr, x, y)
@@ -162,17 +164,30 @@ class TextRegion:
 
         cr.restore()
 
-def draw_rounded_rectangle(cr, x, y, width, height, corner_radius, line_width, fill = False, fill_color = [1, 1, 1]):
+def draw_rectangle(cr, x, y, width, height, 
+                   rounded = True, corner_radius = 15,
+                   line_width = 3,
+                   fill = False, fill_color = [1, 1, 1]):
+
     radius = corner_radius
     degrees = math.pi / 180.0
 
     cr.save()
     cr.translate(x, y)
-    cr.move_to(radius, 0)
-    cr.arc(width - radius, radius, radius, -90 * degrees, 0 * degrees)
-    cr.arc(width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
-    cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
-    cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
+
+    if rounded:
+        cr.move_to(radius, 0)
+        cr.arc(width - radius, radius, radius, -90 * degrees, 0 * degrees)
+        cr.arc(width - radius, height - radius, radius, 0 * degrees, 90 * degrees)
+        cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
+        cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
+    else:
+        cr.move_to(0, 0)
+        cr.line_to(width, 0)
+        cr.line_to(width, height)
+        cr.line_to(0, height)
+        cr.line_to(0, 0)
+        
     cr.set_line_width(line_width)
 
     if fill:
@@ -222,7 +237,7 @@ class Card:
     width = 750 # Width of the card
     height = 1050 # Height of the card
     buffer = 4 # Thickness of the black line around the card
-    corner_radius = 15 # Radius of the rounded corners
+    corner_radius = 15 # Radius of rounded rectangles
     line_width = 3 # Thickness of the lines
     padding = 12 # Space between boxes
     box_w = 130 # Width of the stat boxes on the right side of the card
@@ -286,14 +301,14 @@ class Card:
         # Draw the border line around the card
         border_w = w - 2 * Card.buffer
         border_h = h - 2 * Card.buffer
-        draw_rounded_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, 2, Card.line_width, True)
+        draw_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, corner_radius = 2, line_width = Card.line_width, fill = True)
         
         # Draw the header box for the text
         header_x = Card.padding
         header_y = Card.padding
         header_w = w - box_w - Card.padding * 2
         header_h = h / 11
-        draw_rounded_rectangle(cr, header_x, header_y, header_w, header_h, Card.corner_radius, Card.line_width)
+        draw_rectangle(cr, header_x, header_y, header_w, header_h, corner_radius = Card.corner_radius, line_width = Card.line_width)
 
         header_txt = TextRegion(header_x, header_y, header_w, header_h)
         header_txt.bold = True
@@ -329,7 +344,7 @@ class Card:
         descbox_y = imagebox_y + ImagePanel.height + Card.padding
         descbox_w = w - Card.padding * 2
         descbox_h = h - descbox_y - Card.padding
-        draw_rounded_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, Card.corner_radius, Card.line_width)
+        draw_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius = Card.corner_radius, line_width = Card.line_width)
 
         # Move to the upper left corner where the text will start
         cr.translate(descbox_x + Card.padding, descbox_y + Card.padding)
