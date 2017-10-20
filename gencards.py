@@ -43,6 +43,64 @@ class Color(Enum):
     RED = 2
     PURPLE = 3
 
+class Slot(Enum):
+    HEAD = 0
+    CHEST = 1
+    FEET = 2
+    WEAPON = 3
+    BACK = 4
+    TRINKET = 5
+
+class HeaderBox:
+    def __init__(self, slot, text):
+        self.slot = slot
+        self.text = text
+
+    def draw(self, cr, x, y, width, height):
+        # Draw the slot indicator square
+        self.__draw_slot_indicator(cr, x, y, height)
+
+        # Draw the outline square
+        outline_x = x + height + Card.padding
+        outline_w = width - (outline_x - x)
+        draw_rectangle(cr, outline_x, y, outline_w, height, corner_radius = Card.corner_radius, line_width = Card.line_width)
+
+        header_txt = TextRegion(outline_x, y, outline_w, height)
+        header_txt.bold = True
+        header_txt.vertical_center = True
+        header_txt.horizontal_center = True
+        header_txt.fontsize = 42
+        header_txt.draw_text(cr, self.text)
+
+    def __draw_slot_indicator(self, cr, x, y, size):
+        squares = {
+            Slot.HEAD : [[False, True, False], [False, False, False], [False, False, False]],
+            Slot.CHEST : [[False, False, False], [False, True, False], [False, False, False]],
+            Slot.FEET : [[False, False, False], [False, False, False], [False, True, False]],
+            Slot.WEAPON : [[False, False, False], [True, False, True], [False, False, False]],
+            Slot.BACK : [[True, False, False], [False, False, False], [False, False, False]],
+            Slot.TRINKET : [[False, False, True], [False, False, False], [True, False, True]],
+        }[self.slot]
+        
+        slot_size = size / 3
+        lw = Card.line_width
+
+        for row in range(len(squares)):
+            for col in range(len(squares[row])):
+                slot_x = x + col * slot_size
+                slot_y = y + row * slot_size
+                draw_rectangle(cr, slot_x, slot_y, slot_size, slot_size, rounded = False, fill = False, line_width = lw)
+
+                if squares[row][col]:
+                    # Fill the square with black
+                    fill_x = slot_x + lw
+                    fill_y = slot_y + lw
+                    fill_sz = slot_size - lw * 2
+
+                    draw_rectangle(cr, fill_x, fill_y, fill_sz, fill_sz, rounded = False, fill = True, fill_color = [0, 0, 0], line_width = lw)
+
+        draw_rectangle(cr, x, y, size, size, rounded = False, fill = False)
+
 class ImagePanel:
     shield_padding = 10 # Padding around the shield image
     height = 0
@@ -292,9 +350,10 @@ class Card:
     box_w = 130 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
 
-    def __init__(self, name, color, image):
+    def __init__(self, name, color, slot, image):
         self.stats = []
         self.name = name
+        self.slot = slot
         self.imagebox = ImagePanel(color, image)
         self.text = ""
         self.flavor_text = ""
@@ -366,18 +425,12 @@ class Card:
         draw_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, corner_radius = 2, line_width = Card.line_width, fill = True)
         
         # Draw the header box for the text
+        header = HeaderBox(self.slot, self.name)
         header_x = Card.padding
         header_y = Card.padding
         header_w = w - box_w - Card.padding * 2
         header_h = h / 11
-        draw_rectangle(cr, header_x, header_y, header_w, header_h, corner_radius = Card.corner_radius, line_width = Card.line_width)
-
-        header_txt = TextRegion(header_x, header_y, header_w, header_h)
-        header_txt.bold = True
-        header_txt.vertical_center = True
-        header_txt.horizontal_center = True
-        header_txt.fontsize = 42
-        header_txt.draw_text(cr, self.name)
+        header.draw(cr, header_x, header_y, header_w, header_h)
            
         # Set up layout for all image panels
         ImagePanel.width = header_w
@@ -418,10 +471,10 @@ class Card:
 
 
 def main():
-    brown_card = Card("Test Brown Card", Color.BROWN, "")
-    red_card = Card("Test Red Card", Color.RED, "")
-    blue_card = Card("Test Blue Card", Color.BLUE, "")
-    purple_card = Card("Test Purple Card", Color.PURPLE, "")
+    brown_card = Card("Test Brown Card", Color.BROWN, Slot.TRINKET, "")
+    red_card = Card("Test Red Card", Color.RED, Slot.CHEST, "")
+    blue_card = Card("Test Blue Card", Color.BLUE, Slot.HEAD, "")
+    purple_card = Card("Test Purple Card", Color.PURPLE, Slot.BACK, "")
 
     brown_card.set_text("Destroy this: Deal 10m damage.")
     red_card.set_text("Ranged: Damage from this is dealt after the next player's turn.")
