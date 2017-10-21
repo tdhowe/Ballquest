@@ -52,87 +52,6 @@ class SpecialType(Enum):
     BEAST = 'Wild'
     JEWELED = 'Jeweled'
 
-class DescriptionBox:
-    font_size = 32
-
-    def __init__(self, slot, color, types):
-        self.slot = slot
-        self.color = color
-        self.types = types
-
-    # Create the description string.
-    # The string will be comma separated if 3 or more descriptors,
-    # and the second to last word will be "and"
-    def __get_desc_str(self):
-        desc = []        
-        for t in self.types:
-            desc.append(t.value)
-
-        noun = self.color.value + " " + self.slot.value
-
-        adj_cnt = len(desc)
-
-        if adj_cnt is 0:
-            return noun
-        elif adj_cnt is 1:
-            description = desc[0]
-        elif adj_cnt is 2:
-            description = desc[0] + " and " + desc[1]
-        else:
-            description = desc[0]
-            for i in range(adj_cnt - 2):
-                description += ", "
-                description += desc[i]
-            
-            description += ", and " + desc[adj_cnt - 1]
-
-        return description + " " + noun
-
-    def draw(self, cr, x, y, width, height):
-        # First draw the description box
-        desc_w = width - height - Card.padding
-        draw_rectangle(cr, x, y, desc_w, height)
-
-        # Draw the description text
-        desc_txt = TextRegion(x + Card.padding * 2, y + Card.padding, desc_w - Card.padding * 2, height - Card.padding * 2)
-        desc_txt.bold = False
-        desc_txt.vertical_center = True
-        desc_txt.horizontal_center = False
-        desc_txt.fontsize = DescriptionBox.font_size
-        desc_txt.draw_text(cr, self.__get_desc_str())
-
-        # Put the slot indicator to the right of the description box
-        self.__draw_slot_indicator(cr, x + desc_w + Card.padding, y, height)
-        
-    def __draw_slot_indicator(self, cr, x, y, size):
-        squares = {
-            Slot.HEAD : [[False, True, False], [False, False, False], [False, False, False]],
-            Slot.CHEST : [[False, False, False], [False, True, False], [False, False, False]],
-            Slot.FEET : [[False, False, False], [False, False, False], [False, True, False]],
-            Slot.WEAPON : [[False, False, False], [True, False, True], [False, False, False]],
-            Slot.BACK : [[True, False, False], [False, False, False], [False, False, False]],
-            Slot.TRINKET : [[False, False, True], [False, False, False], [True, False, True]],
-        }[self.slot]
-        
-        slot_size = size / 3
-        lw = Card.line_width
-
-        for row in range(len(squares)):
-            for col in range(len(squares[row])):
-                slot_x = x + col * slot_size
-                slot_y = y + row * slot_size
-                draw_rectangle(cr, slot_x, slot_y, slot_size, slot_size, rounded = False, fill = False, line_width = lw)
-
-                if squares[row][col]:
-                    # Fill the square with black
-                    fill_x = slot_x + lw
-                    fill_y = slot_y + lw
-                    fill_sz = slot_size - lw * 2
-
-                    draw_rectangle(cr, fill_x, fill_y, fill_sz, fill_sz, rounded = False, fill = True, fill_color = [0, 0, 0], line_width = lw)
-
-        draw_rectangle(cr, x, y, size, size, rounded = False, fill = False)
-
 class ImagePanel:
     shield_padding = 10 # Padding around the shield image
     height = 0
@@ -379,8 +298,10 @@ class Card:
     corner_radius = 15 # Radius of rounded rectangles
     line_width = 3 # Thickness of the lines
     padding = 12 # Space between boxes
-    box_w = 115 # Width of the stat boxes on the right side of the card
+    box_w = 130 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
+    desc_text_size = 30
+    desc_h = 70
 
     def __init__(self, name, color, slot, image):
         self.stats = []
@@ -435,8 +356,79 @@ class Card:
         header_txt.fontsize = 42
         header_txt.draw_text(cr, self.name)
 
+    def __draw_slot_indicator(self, cr, x, y, size):
+        squares = {
+            Slot.HEAD : [[False, True, False], [False, False, False], [False, False, False]],
+            Slot.CHEST : [[False, False, False], [False, True, False], [False, False, False]],
+            Slot.FEET : [[False, False, False], [False, False, False], [False, True, False]],
+            Slot.WEAPON : [[False, False, False], [True, False, True], [False, False, False]],
+            Slot.BACK : [[True, False, False], [False, False, False], [False, False, False]],
+            Slot.TRINKET : [[False, False, True], [False, False, False], [True, False, True]],
+        }[self.slot]
+        
+        slot_size = size / 3
+        lw = Card.line_width
+
+        for row in range(len(squares)):
+            for col in range(len(squares[row])):
+                slot_x = x + col * slot_size
+                slot_y = y + row * slot_size
+                draw_rectangle(cr, slot_x, slot_y, slot_size, slot_size, rounded = False, fill = False, line_width = lw)
+
+                if squares[row][col]:
+                    # Fill the square with black
+                    fill_x = slot_x + lw
+                    fill_y = slot_y + lw
+                    fill_sz = slot_size - lw * 2
+
+                    draw_rectangle(cr, fill_x, fill_y, fill_sz, fill_sz, rounded = False, fill = True, fill_color = [0, 0, 0], line_width = lw)
+
+        draw_rectangle(cr, x, y, size, size, rounded = False, fill = False)
+
+    # Create the description string.
+    # The string will be comma separated if 3 or more descriptors,
+    # and the second to last word will be "and"
+    def __get_desc_str(self):
+        desc = []        
+        for t in self.types:
+            desc.append(t.value)
+
+        noun = self.imagebox.color.value + " " + self.slot.value
+
+        adj_cnt = len(desc)
+
+        if adj_cnt is 0:
+            return noun
+        elif adj_cnt is 1:
+            description = desc[0]
+        elif adj_cnt is 2:
+            description = desc[0] + " and " + desc[1]
+        else:
+            description = desc[0]
+            for i in range(adj_cnt - 2):
+                description += ", "
+                description += desc[i]
+            
+            description += ", and " + desc[adj_cnt - 1]
+
+        return description + " " + noun
+
+    def __draw_description_text(self, cr, x, y, width, height):
+        # First draw the description box
+        draw_rectangle(cr, x, y, width, height)
+
+        # Draw the description text
+        desc_txt = TextRegion(x + Card.padding * 2, y + Card.padding, width - Card.padding * 2, height - Card.padding * 2)
+        desc_txt.bold = False
+        desc_txt.vertical_center = True
+        desc_txt.horizontal_center = False
+        desc_txt.fontsize = Card.desc_text_size
+        desc_txt.draw_text(cr, self.__get_desc_str())
+
     # Add a stat with the given name (such as "Price") and value (such as "3")
     def add_stat(self, name, value):
+        if len(self.stats) >= 5:
+            raise Exception("Too many stats for item '" + self.name + "'")
         self.stats.append(StatBox(name, value))
 
     def add_type(self, t):
@@ -488,7 +480,7 @@ class Card:
         
         # Draw the boxes on the right side of the card
         cr.save()
-        box_h = (imagebox_y + ImagePanel.height) / 6
+        box_h = (imagebox_y + ImagePanel.height + Card.padding) / 6
         cr.translate(w - Card.box_w, 0)
 
         StatBox.box_width = Card.box_w
@@ -496,16 +488,22 @@ class Card:
         StatBox.padding = 20
 
         self.__draw_boxes(cr)
+
+        # We want the indicator box to be below all the stats and centered in the column
+        indicator_y = box_h * 5 + Card.padding
+        indicator_size = box_h - Card.padding * 2
+        self.__draw_slot_indicator(cr, Card.box_w - indicator_size - Card.padding * 2, indicator_y, indicator_size)
+
         cr.restore()
+
 
         # Draw the description box below the image
         descbox_x = imagebox_x
         descbox_y = imagebox_y + ImagePanel.height + Card.padding
         descbox_w = w - Card.padding * 2
-        descbox_h = Card.box_w - Card.padding * 2
+        descbox_h = Card.desc_h
 
-        descbox = DescriptionBox(self.slot, self.imagebox.color, self.types)
-        descbox.draw(cr, descbox_x, descbox_y, descbox_w, descbox_h)
+        self.__draw_description_text(cr, descbox_x, descbox_y, descbox_w, descbox_h)
 
         # Draw the detailed text box at the bottom
         detail_x = descbox_x
@@ -554,9 +552,7 @@ def main():
     brown_card.add_stat("HP", "8")
     red_card.add_stat("HP", "6")
     blue_card.add_stat("HP", "6")
-    purple_card.add_stat("HP", "4")
     
-    brown_card.add_stat("Damage", "2s")
     red_card.add_stat("Damage", "6b")
     purple_card.add_stat("Damage", "4m")
 
