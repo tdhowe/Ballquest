@@ -20,11 +20,7 @@ def draw_rectangle(cr, x, y, width, height,
         cr.arc(radius, height - radius, radius, 90 * degrees, 180 * degrees)
         cr.arc(radius, radius, radius, 180 * degrees, 270 * degrees)
     else:
-        cr.move_to(0, 0)
-        cr.line_to(width, 0)
-        cr.line_to(width, height)
-        cr.line_to(0, height)
-        cr.line_to(0, 0)
+        cr.rectangle(0, 0, width, height)
         
     cr.set_line_width(line_width)
 
@@ -38,40 +34,76 @@ def draw_rectangle(cr, x, y, width, height,
     cr.restore()
 
 class Color(Enum):
-    BROWN = 0
-    BLUE = 1
-    RED = 2
-    PURPLE = 3
+    BROWN = 'Brown'
+    BLUE = 'Blue'
+    RED = 'Red'
+    PURPLE = 'Purple'
 
 class Slot(Enum):
-    HEAD = 0
-    CHEST = 1
-    FEET = 2
-    WEAPON = 3
-    BACK = 4
-    TRINKET = 5
+    HEAD = 'Headpiece'
+    CHEST = 'Chestpiece'
+    FEET = 'Footwear'
+    WEAPON = 'Weapon'
+    BACK = 'Back item'
+    TRINKET = 'Trinket'
 
-class HeaderBox:
-    def __init__(self, slot, text):
+class SpecialType(Enum):
+    INSTRUMENT = 'Musical'
+    BEAST = 'Wild'
+    JEWELED = 'Jeweled'
+
+class DescriptionBox:
+    font_size = 32
+
+    def __init__(self, slot, color, types):
         self.slot = slot
-        self.text = text
+        self.color = color
+        self.types = types
+
+    # Create the description string.
+    # The string will be comma separated if 3 or more descriptors,
+    # and the second to last word will be "and"
+    def __get_desc_str(self):
+        desc = []        
+        for t in self.types:
+            desc.append(t.value)
+
+        noun = self.color.value + " " + self.slot.value
+
+        adj_cnt = len(desc)
+
+        if adj_cnt is 0:
+            return noun
+        elif adj_cnt is 1:
+            description = desc[0]
+        elif adj_cnt is 2:
+            description = desc[0] + " and " + desc[1]
+        else:
+            description = desc[0]
+            for i in range(adj_cnt - 2):
+                description += ", "
+                description += desc[i]
+            
+            description += ", and " + desc[adj_cnt - 1]
+
+        return description + " " + noun
 
     def draw(self, cr, x, y, width, height):
-        # Draw the slot indicator square
-        self.__draw_slot_indicator(cr, x, y, height)
+        # First draw the description box
+        desc_w = width - height - Card.padding
+        draw_rectangle(cr, x, y, desc_w, height)
 
-        # Draw the outline square
-        outline_x = x + height + Card.padding
-        outline_w = width - (outline_x - x)
-        draw_rectangle(cr, outline_x, y, outline_w, height, corner_radius = Card.corner_radius, line_width = Card.line_width)
+        # Draw the description text
+        desc_txt = TextRegion(x + Card.padding * 2, y + Card.padding, desc_w - Card.padding * 2, height - Card.padding * 2)
+        desc_txt.bold = False
+        desc_txt.vertical_center = True
+        desc_txt.horizontal_center = False
+        desc_txt.fontsize = DescriptionBox.font_size
+        desc_txt.draw_text(cr, self.__get_desc_str())
 
-        header_txt = TextRegion(outline_x, y, outline_w, height)
-        header_txt.bold = True
-        header_txt.vertical_center = True
-        header_txt.horizontal_center = True
-        header_txt.fontsize = 42
-        header_txt.draw_text(cr, self.text)
-
+        # Put the slot indicator to the right of the description box
+        self.__draw_slot_indicator(cr, x + desc_w + Card.padding, y, height)
+        
     def __draw_slot_indicator(self, cr, x, y, size):
         squares = {
             Slot.HEAD : [[False, True, False], [False, False, False], [False, False, False]],
@@ -318,7 +350,7 @@ class StatBox:
         self.value_text = value_text
 
     def draw(self, cr, x, y, line_width):
-        pad = self.padding
+        pad = StatBox.padding
         text_region = TextRegion(x + pad, y + pad, StatBox.box_width - pad * 2, StatBox.box_height - pad * 2)
 
         # Draw the box outline first
@@ -347,11 +379,12 @@ class Card:
     corner_radius = 15 # Radius of rounded rectangles
     line_width = 3 # Thickness of the lines
     padding = 12 # Space between boxes
-    box_w = 130 # Width of the stat boxes on the right side of the card
+    box_w = 115 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
 
     def __init__(self, name, color, slot, image):
         self.stats = []
+        self.types = []
         self.name = name
         self.slot = slot
         self.imagebox = ImagePanel(color, image)
@@ -364,7 +397,7 @@ class Card:
             box.draw(cr, 0, box_num * StatBox.box_height, Card.line_width)
             box_num += 1
 
-    def __draw_description_text(self, cr, x, y, width, height):
+    def __draw_detail_text(self, cr, x, y, width, height):
         font_size = 36
         padding = 30
         text = self.text
@@ -385,17 +418,29 @@ class Card:
                 text_region.bold = False
                 text_region.draw_text(cr, desc)
             
-        text_region.new_line(cr)
+            text_region.new_line(cr)
                 
         if (flavor is not ""):
             text_region.italic = True
             text_region.fontsize = 30
             text_region.draw_text(cr, flavor)
 
+    def __draw_header_text(self, cr, x, y, width, height):
+        draw_rectangle(cr, x, y, width, height, corner_radius = Card.corner_radius, line_width = Card.line_width)
+
+        header_txt = TextRegion(x, y, width, height)
+        header_txt.bold = True
+        header_txt.vertical_center = True
+        header_txt.horizontal_center = True
+        header_txt.fontsize = 42
+        header_txt.draw_text(cr, self.name)
 
     # Add a stat with the given name (such as "Price") and value (such as "3")
     def add_stat(self, name, value):
         self.stats.append(StatBox(name, value))
+
+    def add_type(self, t):
+        self.types.append(t)
 
     # Set the description text
     def set_text(self, text):
@@ -409,7 +454,6 @@ class Card:
     def create_card(self,):
         w = Card.width
         h = Card.height
-        box_w = 130
 
         surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, w, h)
         cr = cairo.Context (surface)
@@ -425,16 +469,15 @@ class Card:
         draw_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, corner_radius = 2, line_width = Card.line_width, fill = True)
         
         # Draw the header box for the text
-        header = HeaderBox(self.slot, self.name)
         header_x = Card.padding
         header_y = Card.padding
-        header_w = w - box_w - Card.padding * 2
-        header_h = h / 11
-        header.draw(cr, header_x, header_y, header_w, header_h)
+        header_w = w - Card.padding * 2 - Card.box_w
+        header_h = h / 14
+        self.__draw_header_text(cr, header_x, header_y, header_w, header_h)
            
         # Set up layout for all image panels
         ImagePanel.width = header_w
-        ImagePanel.height = h * 2 / 3 - header_h
+        ImagePanel.height = h * 4 / 7
         ImagePanel.corner_radius = Card.corner_radius
         ImagePanel.shield_padding = Card.padding
         ImagePanel.line_width = Card.line_width    
@@ -446,24 +489,33 @@ class Card:
         # Draw the boxes on the right side of the card
         cr.save()
         box_h = (imagebox_y + ImagePanel.height) / 6
-        cr.translate(w - box_w, 0)
+        cr.translate(w - Card.box_w, 0)
 
-        StatBox.box_width = box_w
+        StatBox.box_width = Card.box_w
         StatBox.box_height = box_h
         StatBox.padding = 20
 
         self.__draw_boxes(cr)
         cr.restore()
 
-        # Draw the description box at the bottom
+        # Draw the description box below the image
         descbox_x = imagebox_x
         descbox_y = imagebox_y + ImagePanel.height + Card.padding
         descbox_w = w - Card.padding * 2
-        descbox_h = h - descbox_y - Card.padding
-        draw_rectangle(cr, descbox_x, descbox_y, descbox_w, descbox_h, corner_radius = Card.corner_radius, line_width = Card.line_width)
+        descbox_h = Card.box_w - Card.padding * 2
+
+        descbox = DescriptionBox(self.slot, self.imagebox.color, self.types)
+        descbox.draw(cr, descbox_x, descbox_y, descbox_w, descbox_h)
+
+        # Draw the detailed text box at the bottom
+        detail_x = descbox_x
+        detail_y = descbox_y + descbox_h + Card.padding
+        detail_w = descbox_w
+        detail_h = h - detail_y - Card.padding
+        draw_rectangle(cr, detail_x, detail_y, detail_w, detail_h, corner_radius = Card.corner_radius, line_width = Card.line_width)
 
         # Move to the upper left corner where the text will start
-        self.__draw_description_text(cr, descbox_x, descbox_y, descbox_w, descbox_h)
+        self.__draw_detail_text(cr, detail_x, detail_y, detail_w, detail_h)
 
         output_name = Card.out_folder + self.name.replace(" ", "_") + ".png"
         # Write to output
@@ -472,9 +524,12 @@ class Card:
 
 def main():
     brown_card = Card("Test Brown Card", Color.BROWN, Slot.TRINKET, "")
+    brown_card.add_type(SpecialType.BEAST)
     red_card = Card("Test Red Card", Color.RED, Slot.CHEST, "")
     blue_card = Card("Test Blue Card", Color.BLUE, Slot.HEAD, "")
     purple_card = Card("Test Purple Card", Color.PURPLE, Slot.BACK, "")
+    purple_card.add_type(SpecialType.INSTRUMENT)
+    purple_card.add_type(SpecialType.JEWELED)
 
     brown_card.set_text("Destroy this: Deal 10m damage.")
     red_card.set_text("Ranged: Damage from this is dealt after the next player's turn.")
@@ -494,7 +549,6 @@ def main():
 
     brown_card.add_stat("Priority", "0")
     red_card.add_stat("Priority", "2")
-    blue_card.add_stat("Priority", "2")
     purple_card.add_stat("Priority", "-3")
 
     brown_card.add_stat("HP", "8")
@@ -504,11 +558,9 @@ def main():
     
     brown_card.add_stat("Damage", "2s")
     red_card.add_stat("Damage", "6b")
-    blue_card.add_stat("Damage", "6s/4b")
     purple_card.add_stat("Damage", "4m")
 
     brown_card.add_stat("Capacity", "1")
-    red_card.add_stat("Capacity", "2")
     blue_card.add_stat("Capacity", "3")
     purple_card.add_stat("Capacity", "4")
 
