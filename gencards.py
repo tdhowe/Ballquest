@@ -33,6 +33,25 @@ def draw_rectangle(cr, x, y, width, height,
 
     cr.restore()
 
+def draw_image(cr, x, y, width, height, image):
+    image_surface = cairo.ImageSurface.create_from_png(image)
+
+    # calculate proportional scaling
+    img_height = image_surface.get_height()
+    img_width = image_surface.get_width()
+    width_ratio = float(width) / float(img_width)
+    height_ratio = float(height) / float(img_height)
+    scale_xy = min(height_ratio, width_ratio)
+
+    # scale image and add it
+    cr.save()
+    cr.translate(x - (img_width / 2) * scale_xy, y - (img_height / 2) * scale_xy)
+    cr.scale(scale_xy, scale_xy)
+    cr.set_source_surface(image_surface)
+
+    cr.paint()
+    cr.restore()
+
 class Color(Enum):
     BROWN = 'Brown'
     BLUE = 'Blue'
@@ -44,7 +63,7 @@ class Slot(Enum):
     CHEST = 'Chestpiece'
     FEET = 'Footwear'
     WEAPON = 'Weapon'
-    BACK = 'Back item'
+    BACK = 'Back Item'
     TRINKET = 'Trinket'
 
 class SpecialType(Enum):
@@ -88,7 +107,7 @@ class ImagePanel:
             cr.curve_to(-0.353, 0.85, -0.72, 0.8, -1, 0.85)
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
 
-    def draw_shield(self, cr, x, y):
+    def __draw_shield(self, cr, x, y):
         cr.save()
 
         width = ImagePanel.width - ImagePanel.shield_padding * 2
@@ -139,7 +158,10 @@ class ImagePanel:
             corner_radius = ImagePanel.corner_radius, line_width = ImagePanel.line_width)
 
         # draw the shield background
-        self.draw_shield(cr, x, y)
+        self.__draw_shield(cr, x, y)
+
+        # draw the image
+        draw_image(cr, x + ImagePanel.width / 2, y + ImagePanel.height / 2, ImagePanel.width / 2, ImagePanel.height / 2, self.image)
 
 class TextRegion:
 
@@ -303,12 +325,12 @@ class Card:
     desc_text_size = 30
     desc_h = 70
 
-    def __init__(self, name, color, slot, image):
+    def __init__(self, name, color, slot):
         self.stats = []
         self.types = []
         self.name = name
         self.slot = slot
-        self.imagebox = ImagePanel(color, image)
+        self.imagebox = ImagePanel(color, "Images/" + name + ".png")
         self.text = ""
         self.flavor_text = ""
 
@@ -521,11 +543,11 @@ class Card:
 
 
 def main():
-    brown_card = Card("Test Brown Card", Color.BROWN, Slot.TRINKET, "")
+    brown_card = Card("Test Brown Card", Color.BROWN, Slot.TRINKET)
     brown_card.add_type(SpecialType.BEAST)
-    red_card = Card("Test Red Card", Color.RED, Slot.CHEST, "")
-    blue_card = Card("Test Blue Card", Color.BLUE, Slot.HEAD, "")
-    purple_card = Card("Test Purple Card", Color.PURPLE, Slot.BACK, "")
+    red_card = Card("Test Red Card", Color.RED, Slot.CHEST)
+    blue_card = Card("Test Blue Card", Color.BLUE, Slot.HEAD)
+    purple_card = Card("Test Purple Card", Color.PURPLE, Slot.BACK)
     purple_card.add_type(SpecialType.INSTRUMENT)
     purple_card.add_type(SpecialType.JEWELED)
 
@@ -560,10 +582,8 @@ def main():
     blue_card.add_stat("Capacity", "3")
     purple_card.add_stat("Capacity", "4")
 
-    brown_card.create_card();
-    red_card.create_card();
-    blue_card.create_card();
-    purple_card.create_card();
-
-
+    purple_card.create_card()
+    brown_card.create_card()
+    red_card.create_card()
+    blue_card.create_card()
 main()
