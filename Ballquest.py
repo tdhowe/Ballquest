@@ -1,5 +1,6 @@
 import math
 import cairo
+from Drawable import *
 from enum import Enum
 
 def draw_rectangle(cr, x, y, width, height, 
@@ -31,25 +32,6 @@ def draw_rectangle(cr, x, y, width, height,
         cr.set_source_rgb(0,0,0)
         cr.stroke()
 
-    cr.restore()
-
-def draw_image(cr, x, y, width, height, image):
-    image_surface = cairo.ImageSurface.create_from_png(image)
-
-    # calculate proportional scaling
-    img_height = image_surface.get_height()
-    img_width = image_surface.get_width()
-    width_ratio = float(width) / float(img_width)
-    height_ratio = float(height) / float(img_height)
-    scale_xy = min(height_ratio, width_ratio)
-
-    # scale image and add it
-    cr.save()
-    cr.translate(x - (img_width / 2) * scale_xy, y - (img_height / 2) * scale_xy)
-    cr.scale(scale_xy, scale_xy)
-    cr.set_source_surface(image_surface)
-
-    cr.paint()
     cr.restore()
 
 class Color(Enum):
@@ -161,7 +143,8 @@ class ImagePanel:
         self.__draw_shield(cr, x, y)
 
         # draw the image
-        draw_image(cr, x + ImagePanel.width / 2, y + ImagePanel.height / 2, ImagePanel.width / 2, ImagePanel.height / 2, self.image)
+        img = DrawableImage(x + ImagePanel.width / 2, y + ImagePanel.height / 2, ImagePanel.width / 2, ImagePanel.height / 2, self.image)
+        img.draw(cr)
 
 class TextRegion:
 
