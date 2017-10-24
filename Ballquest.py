@@ -143,8 +143,13 @@ class ImagePanel:
         self.__draw_shield(cr, x, y)
 
         # draw the image
-        img = DrawableImage(x + ImagePanel.width / 2, y + ImagePanel.height / 2, ImagePanel.width / 2, ImagePanel.height / 2, self.image)
+        img_x = x + ImagePanel.width / 2
+        img_y = y + ImagePanel.height / 2
+        cr.save()
+        img = DrawableImage(ImagePanel.width / 2, ImagePanel.height / 2, self.image)
+        cr.translate(img_x, img_y)
         img.draw(cr)
+        cr.restore()
 
 class TextRegion:
 
@@ -192,14 +197,24 @@ class TextRegion:
         cr.save()
         self.__set_font(cr)
 
+
         if self.vertical_center or self.horizontal_center:
-            self.__draw_text_centered(cr, text)
+            item = DrawableText(text)
+            self.__draw_item(cr, item)
         else:
             self.__draw_text(cr, text)
 
         cr.restore()
 
+    def draw_item(self, cr, drawable):
+        cr.save()
+        self.__set_font(cr)
 
+        self.__draw_item(cr, drawable)
+
+        cr.restore()
+
+    # Draw the text and wrap around to the next line if necessary
     def __draw_text(self, cr, text):
         x = self.__last_pos[0]
         y = self.__last_pos[1]
@@ -227,29 +242,26 @@ class TextRegion:
 
         self.__last_pos[0] = x
         self.__last_pos[1] = y - y_centering
-    
-    def __draw_text_centered(self, cr, text):
-
+            
+    def __draw_item(self, cr, drawable):
         x = self.__last_pos[0]
         y = self.__last_pos[1]
 
         # Use text to get the drawn width
-        text_size = cr.text_extents(text)
-
-        # Use font to make sure we are vertically centered
-        font_size = cr.font_extents()
+        w, h = drawable.get_size(cr)
 
         if self.horizontal_center:
-            x = (x + self.x + self.width) / 2 - text_size.x_advance / 2
+            x = (x + self.x + self.width) / 2 - w / 2
         if self.vertical_center:
             y = (y + self.y + self.height) / 2
         
-        y_centering = font_size[2] / 4
-        y += y_centering  
+        y_centering = h / 4
+        y += y_centering
         
         # Move to the to the start of the text string
-        cr.move_to(x, y)            
-        cr.show_text(text)
+        cr.move_to(x, y)
+
+        drawable.draw(cr)
 
         curx, cury = cr.get_current_point()
         if self.horizontal_center: x = self.x
@@ -257,7 +269,7 @@ class TextRegion:
 
         if not self.vertical_center:
             # Update the y location for the next write
-            y = cury + font_size[2]
+            y = cury + h
 
         self.__last_pos[0] = x
         self.__last_pos[1] = y - y_centering
