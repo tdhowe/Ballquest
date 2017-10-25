@@ -34,12 +34,6 @@ def draw_rectangle(cr, x, y, width, height,
 
     cr.restore()
 
-class Color(Enum):
-    BROWN = 'Brown'
-    BLUE = 'Blue'
-    RED = 'Red'
-    PURPLE = 'Purple'
-
 class Slot(Enum):
     HEAD = 'Headpiece'
     CHEST = 'Chestpiece'
@@ -64,30 +58,6 @@ class ImagePanel:
         self.color = color
         self.image = image
 
-    # Shield Geometry is dependent on color
-    def __draw_shield_geometry(self, cr):
-        if (self.color is Color.BROWN):
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.83)
-            cr.curve_to(0.4, 1.04, -0.4, 1.04, -1, 0.83)
-            cr.curve_to(-0.9, .4, -.55, .1, 0, 0) 
-        if (self.color is Color.RED):
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.97)
-            cr.line_to(0, 0.85)
-            cr.line_to(-1, 0.97)
-            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
-        if (self.color is Color.BLUE):
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.75)
-            cr.line_to(0.4, 1)
-            #cr.curve_to(0.75, 0.8, 0.6, 0.86, 0.4, 1)
-            cr.line_to(-0.4, 1)
-            #cr.curve_to(-0.6, 0.86, -0.75, 0.8, -1, 0.75)     
-            cr.line_to(-1, 0.75)
-            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
-        if (self.color is Color.PURPLE):
-            cr.curve_to(.55, .1, 0.9, .4, 1, 0.85)
-            cr.curve_to(0.72, 0.8, 0.33, 0.85, 0, 1)
-            cr.curve_to(-0.353, 0.85, -0.72, 0.8, -1, 0.85)
-            cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
 
     def __draw_shield(self, cr, x, y):
         cr.save()
@@ -98,35 +68,17 @@ class ImagePanel:
         x = x + width / 2 + ImagePanel.shield_padding
         y = y + height + ImagePanel.shield_padding
 
+        shield = DrawableShield(width, height, self.color)
         # The coordinate space is defined as 0,0 at the center-bottom
         # of the ImagePanel.  Positive Y is up (we invert the scale so this is the case).
         # The bezier curve is determined by which color shield we are trying to draw.
         cr.translate(x, y)
-        cr.scale(width / 2, -height)
-
-        # Fill with white, then draw the outline
-        for fill in [True, False]:
-            cr.move_to(0,0)
-
-            self.__draw_shield_geometry(cr)
-
-            if (fill):
-                cr.set_source_rgb(1, 1, 1)
-                cr.fill()
-            else:
-                cr.set_source_rgb(0, 0, 0)
-                cr.set_line_width(0.005)
-                cr.stroke()
+        shield.draw(cr)
 
         cr.restore()
 
     def draw(self, cr, x, y):
-        rgb = {
-            Color.BROWN : [0.64, 0.5, 0.34],
-            Color.BLUE : [0.5, 0.7, 0.9],
-            Color.RED : [1, 0.61, 0.61],
-            Color.PURPLE : [0.84, 0.72, 1.0]
-        }[self.color]
+        rgb = self.color.get_rgb()
 
         # Fill in the background
         draw_rectangle(cr, x,  y, 
