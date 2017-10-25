@@ -21,9 +21,9 @@ def main():
     purple_card.add_stat("Price", "4")
 
     brown_card.add_stat("Appeal", "-4")
-    red_card.add_stat("Appeal", "3")
+    red_card.add_stat("Appeal", "Red Match 3")
     blue_card.add_stat("Appeal", "3")
-    purple_card.add_stat("Appeal", "4")
+    purple_card.add_stat("Appeal", "Purple Match 4")
 
     brown_card.add_stat("Priority", "0")
     red_card.add_stat("Priority", "2")

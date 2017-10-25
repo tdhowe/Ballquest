@@ -65,8 +65,8 @@ class ImagePanel:
         width = ImagePanel.width - ImagePanel.shield_padding * 2
         height = ImagePanel.height - ImagePanel.shield_padding * 2
 
-        x = x + width / 2 + ImagePanel.shield_padding
-        y = y + height + ImagePanel.shield_padding
+        x = x + ImagePanel.shield_padding
+        y = y + ImagePanel.shield_padding
 
         shield = DrawableShield(width, height, self.color)
         # The coordinate space is defined as 0,0 at the center-bottom
@@ -151,7 +151,7 @@ class TextRegion:
 
 
         if self.vertical_center or self.horizontal_center:
-            item = DrawableText(text)
+            item = DrawableText(text, self.bold, self.italic, self.font, self.fontsize)
             self.__draw_item(cr, item)
         else:
             self.__draw_text(cr, text)
@@ -166,10 +166,12 @@ class TextRegion:
 
         cr.restore()
 
+    def get_current_position(self):
+        return self.__last_pos[0], self.__last_pos[1]
+
     # Draw the text and wrap around to the next line if necessary
     def __draw_text(self, cr, text):
-        x = self.__last_pos[0]
-        y = self.__last_pos[1]
+        x, y = self.get_current_position()
 
         # Use text to get the drawn width
         text_size = cr.text_extents(text)
@@ -196,8 +198,7 @@ class TextRegion:
         self.__last_pos[1] = y - y_centering
             
     def __draw_item(self, cr, drawable):
-        x = self.__last_pos[0]
-        y = self.__last_pos[1]
+        x, y = self.get_current_position()
 
         # Use text to get the drawn width
         w, h = drawable.get_size(cr)
@@ -231,7 +232,7 @@ class StatBox:
     box_height = 0
     padding = 0
     header_font_size = 24
-    value_font_size = 36
+    value_font_size = 38
 
     def __init__(self, header_text, value_text):
         self.header_text = header_text
@@ -255,10 +256,23 @@ class StatBox:
         text_region.draw_text(cr, self.header_text)
 
         # Finally draw the value
-        text_region.bold = False
+        if "match" in self.value_text.lower():
+            # If we are drawing a match value, we need a different drawable object
+            parsed = self.value_text.split(" ")
+            color = Color[parsed[0].upper()]
+            match_cnt = int(parsed[2])
+
+            cur_y = text_region.get_current_position()[1]
+            size = self.value_font_size * 3 / 2
+
+            value = DrawableAppealMatch(size, size, color, match_cnt)
+        else:
+            # Draw the text directly
+            value = DrawableText(self.value_text)
+            value.fontsize = self.value_font_size
+
         text_region.vertical_center = True
-        text_region.fontsize = self.value_font_size
-        text_region.draw_text(cr, self.value_text)
+        text_region.draw_item(cr, value)
 
 class Card:
     width = 750 # Width of the card

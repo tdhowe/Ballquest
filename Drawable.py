@@ -28,7 +28,6 @@ class Drawable:
     def get_size(self, cr):
         return 0, 0
 
-
 class DrawableImage(Drawable):
     def __init__(self, width, height, image):
         self.image_surface = cairo.ImageSurface.create_from_png(image)
@@ -56,17 +55,33 @@ class DrawableImage(Drawable):
         return self.img_width * self.scale_xy, self.img_height * self.scale_xy
 
 class DrawableText(Drawable):
-    def __init__(self, text):
+    def __init__(self, text, bold = False, italic = False, font = "Constantia", fontsize = 20):
         self.text = text
+        self.bold = bold
+        self.italic = italic
+        self.font = font
+        self.fontsize = fontsize
+    
+    # Apply the font for this drawable to the current cairo context
+    def __apply_font(self, cr):
+        slant = cairo.FONT_SLANT_ITALIC if self.italic else cairo.FONT_SLANT_NORMAL
+        weight = cairo.FONT_WEIGHT_BOLD if self.bold else cairo.FONT_WEIGHT_NORMAL
+        cr.select_font_face(self.font, slant, weight)
+        cr.set_font_size(self.fontsize)
+        cr.set_source_rgb(0, 0, 0)
 
     def draw(self, cr):
         cr.save()
+        self.__apply_font(cr)
         cr.show_text(self.text)
         cr.restore()
 
     def get_size(self, cr):
+        cr.save()
+        self.__apply_font(cr)
         word_size = cr.text_extents(self.text)
         font_size = cr.font_extents()
+        cr.restore()
         return word_size.x_advance, font_size[2]
     
 class DrawableShield(Drawable):
@@ -75,12 +90,14 @@ class DrawableShield(Drawable):
         self.w = width
         self.h = height
         self.white_fill = white_fill
+        self.line_width = 0.005
         
     def get_size(self, cr):
         return self.w, self.h
 
     def draw(self, cr):
         cr.save()
+        cr.translate(self.w / 2, self.h)
         cr.scale(self.w / 2, -self.h)
 
         # Fill with white, then draw the outline
@@ -97,7 +114,7 @@ class DrawableShield(Drawable):
                 cr.fill()
             else:
                 cr.set_source_rgb(0, 0, 0)
-                cr.set_line_width(0.005)
+                cr.set_line_width(self.line_width)
                 cr.stroke()
 
         cr.restore()
@@ -126,3 +143,35 @@ class DrawableShield(Drawable):
             cr.curve_to(0.72, 0.8, 0.33, 0.85, 0, 1)
             cr.curve_to(-0.353, 0.85, -0.72, 0.8, -1, 0.85)
             cr.curve_to(-0.9, .4, -.55, .1, 0, 0)
+
+class DrawableAppealMatch(Drawable):
+    # Create a new drawable "<color> match <cnt>" icon.
+    # The width and height represent the size of the
+    # individual shields in the match display
+    def __init__(self, width, height, color, match_cnt):
+        self.color = color
+        self.w = width
+        self.h = height
+        self.match_cnt = match_cnt
+        
+    def get_size(self, cr):
+        return self.w, self.h
+
+    def draw(self, cr):
+        cr.save()
+        shield = DrawableShield(self.w, self.h, self.color, False)
+        shield.line_width = 0.04
+        text = DrawableText(str(self.match_cnt))
+        text.fontsize = self.w * 2 / 3
+        text.bold = True
+        text_size = text.get_size(cr)
+
+        curx, cury = cr.get_current_point()
+        cr.translate(curx, cury - self.h * 3 / 4)
+        shield.draw(cr)
+
+        cr.translate(self.w / 2 - text_size[0] / 2, self.h / 2 + text_size[1] / 8)
+
+        text.draw(cr)
+
+        cr.restore()
