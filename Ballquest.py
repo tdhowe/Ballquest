@@ -42,11 +42,6 @@ class Slot(Enum):
     BACK = 'Back Item'
     TRINKET = 'Trinket'
 
-class SpecialType(Enum):
-    INSTRUMENT = 'Musical'
-    BEAST = 'Wild'
-    JEWELED = 'Jeweled'
-
 class ImagePanel:
     shield_padding = 10 # Padding around the shield image
     height = 0
@@ -400,13 +395,29 @@ class Card:
         # First draw the description box
         draw_rectangle(cr, x, y, width, height)
 
+        # Then the icons
+        img_size = 50
+        images = [t.get_image(img_size) for t in self.types]
+
+        cr.save()
+
+        cr.translate(x + Card.padding * 3, y + height / 2)
+
+        for img in images:
+            img.draw(cr)
+            cr.translate(img_size, 0)
+
+        cr.translate(-Card.padding, -height / 2 + Card.padding)
+
         # Draw the description text
-        desc_txt = TextRegion(x + Card.padding * 2, y + Card.padding, width - Card.padding * 2, height - Card.padding * 2)
+        desc_txt = TextRegion(0, 0, width - Card.padding * 2, height - Card.padding * 2)
         desc_txt.bold = False
         desc_txt.vertical_center = True
         desc_txt.horizontal_center = False
         desc_txt.fontsize = Card.desc_text_size
         desc_txt.draw_text(cr, self.__get_desc_str())
+
+        cr.restore()
 
     # Add a stat with the given name (such as "Price") and value (such as "3")
     def add_stat(self, name, value):

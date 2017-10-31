@@ -18,6 +18,15 @@ class Color(Enum):
 
         return rgb
 
+class SpecialType(Enum):
+    INSTRUMENT = 'Musical'
+    BEAST = 'Wild'
+    JEWELED = 'Jeweled'
+
+    def get_image(self, size):
+        path = 'images/' + self.value + '.png'
+        return DrawableImage(size, size, path)
+
 class Drawable:
     # Do nothing in the base class
     def draw(self, cr):
