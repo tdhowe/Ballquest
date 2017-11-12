@@ -257,10 +257,18 @@ class StatBox:
             color = Color[parsed[0].upper()]
             match_cnt = int(parsed[2])
 
-            cur_y = text_region.get_current_position()[1]
             size = self.value_font_size * 3 / 2
 
             value = DrawableAppealMatch(size, size, color, match_cnt)
+        elif "/" in self.value_text:
+            parsed = self.value_text.split("/")
+            cnt = int(parsed[0])
+            t = SpecialType[parsed[1].upper()]
+            size = self.value_font_size * 3 / 2
+
+            value = DrawableMultipleAppeal(text_region.width, text_region.height - size, cnt, t)
+            value.fontsize = self.value_font_size
+
         else:
             # Draw the text directly
             value = DrawableText(self.value_text)

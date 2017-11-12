@@ -184,3 +184,45 @@ class DrawableAppealMatch(Drawable):
         text.draw(cr)
 
         cr.restore()
+
+class DrawableMultipleAppeal(Drawable):
+    # Create a new appeal indicator for 1/Instrument or 1/Beast... etc
+    def __init__(self, width, height, count_per, special_type):
+        self.w = width
+        self.h = height
+        self.cnt = count_per
+        self.special_type = special_type
+        self.fontsize = 30
+
+    def get_size(self, cr):
+        return self.w, self.h
+
+    def draw(self, cr):
+        cr.save()
+
+        text = DrawableText(str(self.cnt) + " /")
+        text.fontsize = self.fontsize
+        sz = text.get_size(cr)
+
+        text_w = sz[0]
+        text_h = sz[1] * 3 / 4
+        img_size = text_h
+
+        content_w = text_w + img_size
+
+        delta = self.w - content_w
+        curx, cury = cr.get_current_point()
+        cr.translate(curx, cury)
+        cr.move_to(delta / 2, 0)
+        text.draw(cr)
+
+        cr.move_to(delta / 2 + text_w + img_size / 2, 0)
+        curx, cury = cr.get_current_point()
+        cr.translate(curx, -img_size / 4)
+
+        img = self.special_type.get_image(img_size)
+        img.draw(cr)
+
+        cr.restore()
+    
+    
