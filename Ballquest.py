@@ -34,14 +34,6 @@ def draw_rectangle(cr, x, y, width, height,
 
     cr.restore()
 
-class Slot(Enum):
-    HEAD = 'Headpiece'
-    CHEST = 'Chestpiece'
-    FEET = 'Footwear'
-    WEAPON = 'Weapon'
-    BACK = 'Back Item'
-    TRINKET = 'Trinket'
-
 class ImagePanel:
     shield_padding = 10 # Padding around the shield image
     height = 0

@@ -17,6 +17,37 @@ class Color(Enum):
         }[self]
 
         return rgb
+    
+    def from_string(name):
+        t = {
+            'BROWN'  : Color.BROWN,
+            'BLUE'   : Color.BLUE,
+            'RED'    : Color.RED,
+            'PURPLE' : Color.PURPLE,
+        }[name.upper()]
+
+        return t
+
+
+class Slot(Enum):
+    HEAD = 'Headpiece'
+    CHEST = 'Chestpiece'
+    FEET = 'Footwear'
+    WEAPON = 'Weapon'
+    BACK = 'Back Item'
+    TRINKET = 'Trinket'
+    
+    def from_string(name):
+        t = {
+            'HEAD'    : Slot.HEAD,
+            'CHEST'   : Slot.CHEST,
+            'FEET'    : Slot.FEET,
+            'WEAPON'  : Slot.WEAPON,
+            'BACK'    : Slot.BACK,
+            'TRINKET' : Slot.TRINKET,
+        }[name.upper()]
+
+        return t
 
 class SpecialType(Enum):
     INSTRUMENT = 'Musical'
@@ -26,6 +57,18 @@ class SpecialType(Enum):
     def get_image(self, size):
         path = 'images/' + self.value + '.png'
         return DrawableImage(size, size, path)
+
+    def from_string(name):
+        t = {
+            'INSTRUMENT' : SpecialType.INSTRUMENT,
+            'BEAST'      : SpecialType.BEAST,
+            'JEWELED'    : SpecialType.JEWELED,
+        }
+
+        if name.upper() in t:
+            return t[name.upper()]
+
+        return None
 
 class Drawable:
     # Do nothing in the base class
