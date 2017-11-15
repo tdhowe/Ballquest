@@ -1,7 +1,12 @@
 import math
 import cairo
+import string
 from Drawable import *
 from enum import Enum
+
+def sanitize_filename(filename):
+    valid_chars = "-_.()/%s%s" % (string.ascii_letters, string.digits)
+    return ''.join(c for c in filename.strip() if c in valid_chars)
 
 def draw_rectangle(cr, x, y, width, height, 
                    rounded = True, corner_radius = 15,
@@ -43,8 +48,7 @@ class ImagePanel:
 
     def __init__(self, color, image):
         self.color = color
-        self.image = image
-
+        self.image = sanitize_filename(image)
 
     def __draw_shield(self, cr, x, y):
         cr.save()
@@ -509,6 +513,6 @@ class Card:
         # Move to the upper left corner where the text will start
         self.__draw_detail_text(cr, detail_x, detail_y, detail_w, detail_h)
 
-        output_name = Card.out_folder + self.name.replace(" ", "_") + ".png"
+        output_name = Card.out_folder + sanitize_filename(self.name) + ".png"
         # Write to output
         surface.write_to_png(output_name)

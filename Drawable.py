@@ -1,5 +1,6 @@
 import cairo
 from enum import Enum
+import os.path
 
 class Color(Enum):
     BROWN = 'Brown'
@@ -82,7 +83,13 @@ class Drawable:
 
 class DrawableImage(Drawable):
     def __init__(self, width, height, image):
-        self.image_surface = cairo.ImageSurface.create_from_png(image)
+
+        if os.path.isfile(image):
+            self.image_surface = cairo.ImageSurface.create_from_png(image)
+        else:
+            print("Warning: could not find image for :" + image)
+            self.image_surface = cairo.ImageSurface.create_from_png('images/no_image.png')
+
         self.w = width
         self.h = height
 
