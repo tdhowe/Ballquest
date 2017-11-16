@@ -309,21 +309,29 @@ class Card:
         text_region = TextRegion(x + padding, y + padding * 2, width - padding * 2, height - padding * 3)
         text_region.fontsize = font_size
 
-        if (text is not ""):
-            if (":" in text):
-                keyword, desc = text.split(":")
-                keyword = keyword.strip() + ": "
-                desc = desc.strip()
+        if len(text) > 0:
+            words = text.split(' ')
+            keyword_cnt = text.count(':')
+            
+            # First part of detail text will be the keyword if it is present
+            bold = keyword_cnt > 0
 
-                text_region.bold = True
-                text_region.draw_text(cr, keyword)
+            for word in words:
+                text_region.bold = bold
+                text_region.draw_text(cr, word)
 
-                text_region.bold = False
-                text_region.draw_text(cr, desc)
+                # End of keyword, stop bolding until sentence end
+                if ":" in word:
+                    bold = False
+                    keyword_cnt -= 1
+
+                # At sentence end, resume bolding for the next word
+                if "." in word:
+                    bold = keyword_cnt > 0
             
             text_region.new_line(cr)
                 
-        if (flavor is not ""):
+        if len(flavor) > 0:
             text_region.italic = True
             text_region.fontsize = 30
             text_region.draw_text(cr, flavor)
@@ -437,7 +445,7 @@ class Card:
         self.text = text
     
     # Set the flavor text (shown in italics below the description)
-    def set_flavor_tet(self, flavor_text):
+    def set_flavor_text(self, flavor_text):
         self.flavor_text = flavor_text
 
     # Generate the card in the output folder based on current settings

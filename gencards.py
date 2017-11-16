@@ -11,9 +11,9 @@ def main():
 
     brown_card.set_text("Destroy this: Deal 10m damage.")
     red_card.set_text("Ranged: Damage from this is dealt after the next player's turn.")
-    blue_card.set_flavor_tet("This item comes from the witch of dag'raba in the fallen swamp.")
+    blue_card.set_flavor_text("This item comes from the witch of dag'raba in the fallen swamp.")
     purple_card.set_text("When destroyed: Each player must give you an item.")
-    purple_card.set_flavor_tet("\"It's good to be king.\" - Tom Petty")
+    purple_card.set_flavor_text("\"It's good to be king.\" - Tom Petty")
 
     brown_card.add_stat("Price", "2")
     red_card.add_stat("Price", "3")

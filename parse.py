@@ -15,7 +15,7 @@ def __main(filename):
         for row in reader:
             color = Color.from_string(row['Color'])
             slot = Slot.from_string(row['Slot'])
-            card = Card(row['Name'], color, slot)
+            card = Card(row['Name'].strip(), color, slot)
 
             special_type = SpecialType.from_string(row['Type'])
 
@@ -36,6 +36,30 @@ def __main(filename):
 
             __add_stat(card, row, 'HP', optional = True)
             __add_stat(card, row, 'Capacity', optional = True)
+
+            # Description is a combination of passive and ability columns
+            passive = row['Passive']
+            active = row['Ability']
+
+            if len(passive) > 0:
+                passive = passive + " "
+                
+            rules_text = passive + active
+
+            # Insert the rules text for certain keywords.
+            # Technically we don't need a dictionary, but it makes things cleaner
+            rules = {
+                'Wild' : 'Wild: Discard this item when it is unequipped.',
+                'Block' : 'Block: When you attack with this, redirect 2 damage to this item.',
+                'Take Aim' : 'Take Aim: Damage from this weapon does not occur until after the next player\'s action.'
+            }
+
+            rules_text = rules_text.replace('Wild', rules['Wild'])
+            rules_text = rules_text.replace('Block', rules['Block'])
+            rules_text = rules_text.replace('Take Aim', rules['Take Aim'])
+
+            card.set_text(rules_text.strip())
+            card.set_flavor_text(row['Description'].strip())            
 
             card.create_card()
 
