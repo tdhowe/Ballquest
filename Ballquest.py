@@ -103,7 +103,7 @@ class TextRegion:
         self.y = y
         self.width = width
         self.height = height
-        self.font = "Constantia"
+        self.font = "Palatino Linotype"
         self.bold = False
         self.italic = False
         self.horizontal_center = False
@@ -282,7 +282,7 @@ class Card:
     padding = 12 # Space between boxes
     box_w = 130 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
-    desc_text_size = 30
+    desc_text_size = 28
     desc_h = 70
 
     def __init__(self, name, color, slot):
@@ -301,7 +301,7 @@ class Card:
             box_num += 1
 
     def __draw_detail_text(self, cr, x, y, width, height):
-        font_size = 36
+        font_size = 32
         padding = 30
         text = self.text
         flavor = self.flavor_text
@@ -333,7 +333,7 @@ class Card:
                 
         if len(flavor) > 0:
             text_region.italic = True
-            text_region.fontsize = 30
+            text_region.fontsize = 28
             text_region.draw_text(cr, flavor)
 
     def __draw_header_text(self, cr, x, y, width, height):

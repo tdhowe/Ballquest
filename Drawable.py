@@ -114,7 +114,7 @@ class DrawableImage(Drawable):
         return self.img_width * self.scale_xy, self.img_height * self.scale_xy
 
 class DrawableText(Drawable):
-    def __init__(self, text, bold = False, italic = False, font = "Constantia", fontsize = 20):
+    def __init__(self, text, bold = False, italic = False, font = "Palatino Linotype", fontsize = 20):
         self.text = text
         self.bold = bold
         self.italic = italic
@@ -229,7 +229,7 @@ class DrawableAppealMatch(Drawable):
         cr.translate(curx, cury - self.h * 3 / 4)
         shield.draw(cr)
 
-        cr.translate(self.w / 2 - text_size[0] / 2, self.h / 2 + text_size[1] / 8)
+        cr.translate(self.w / 2 - text_size[0] / 2, self.h / 2 + text_size[1] / 4)
 
         text.draw(cr)
 
@@ -268,7 +268,7 @@ class DrawableMultipleAppeal(Drawable):
 
         cr.move_to(delta / 2 + text_w + img_size / 2, 0)
         curx, cury = cr.get_current_point()
-        cr.translate(curx, -img_size / 4)
+        cr.translate(curx, -img_size * 2 / 7)
 
         img = self.special_type.get_image(img_size)
         img.draw(cr)
