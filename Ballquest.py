@@ -276,11 +276,11 @@ class StatBox:
 class Card:
     width = 822 # Width of the card
     height = 1122 # Height of the card
-    buffer = 38 # Thickness of the black line around the card
-    buffer_radius = 20 # Radius out outer black line's corners
-    corner_radius = 8 # Radius of rounded rectangles
+    buffer = 48 # Thickness of the black line around the card
+    buffer_radius = 32 # Radius out outer black line's corners
+    corner_radius = 12 # Radius of rounded rectangles
     line_width = 3 # Thickness of the lines
-    outer_padding = 30 # Padding for space between outer boxes and the border line
+    outer_padding = 22 # Padding for space between outer boxes and the border line
     padding = 14 # Space between boxes
     box_w = 130 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
