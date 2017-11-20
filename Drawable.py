@@ -262,7 +262,7 @@ class DrawableMultipleAppeal(Drawable):
 
         delta = self.w - content_w
         curx, cury = cr.get_current_point()
-        cr.translate(curx, cury)
+        cr.translate(curx, cury + text_h / 4)
         cr.move_to(delta / 2, 0)
         text.draw(cr)
 

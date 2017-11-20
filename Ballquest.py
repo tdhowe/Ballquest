@@ -274,15 +274,17 @@ class StatBox:
         text_region.draw_item(cr, value)
 
 class Card:
-    width = 750 # Width of the card
-    height = 1050 # Height of the card
-    buffer = 4 # Thickness of the black line around the card
-    corner_radius = 15 # Radius of rounded rectangles
+    width = 822 # Width of the card
+    height = 1122 # Height of the card
+    buffer = 38 # Thickness of the black line around the card
+    buffer_radius = 20 # Radius out outer black line's corners
+    corner_radius = 8 # Radius of rounded rectangles
     line_width = 3 # Thickness of the lines
-    padding = 12 # Space between boxes
+    outer_padding = 30 # Padding for space between outer boxes and the border line
+    padding = 14 # Space between boxes
     box_w = 130 # Width of the stat boxes on the right side of the card
     out_folder = "gen/"
-    desc_text_size = 28
+    desc_text_size = 30
     desc_h = 70
 
     def __init__(self, name, color, slot):
@@ -297,16 +299,16 @@ class Card:
     def __draw_boxes(self, cr):
         box_num = 0
         for box in self.stats:
-            box.draw(cr, 0, box_num * StatBox.box_height, Card.line_width)
+            box.draw(cr, 0, Card.buffer + box_num * StatBox.box_height, Card.line_width)
             box_num += 1
 
     def __draw_detail_text(self, cr, x, y, width, height):
-        font_size = 32
-        padding = 30
+        font_size = 36
+        padding = Card.padding * 2
         text = self.text
         flavor = self.flavor_text
 
-        text_region = TextRegion(x + padding, y + padding * 2, width - padding * 2, height - padding * 3)
+        text_region = TextRegion(x + padding, y + padding * 3 / 2, width - padding * 2, height - padding * 3)
         text_region.fontsize = font_size
 
         if len(text) > 0:
@@ -333,7 +335,7 @@ class Card:
                 
         if len(flavor) > 0:
             text_region.italic = True
-            text_region.fontsize = 28
+            text_region.fontsize = 32
             text_region.draw_text(cr, flavor)
 
     def __draw_header_text(self, cr, x, y, width, height):
@@ -405,7 +407,7 @@ class Card:
 
     def __draw_description_text(self, cr, x, y, width, height):
         # First draw the description box
-        draw_rectangle(cr, x, y, width, height)
+        draw_rectangle(cr, x, y, width, height, corner_radius = Card.corner_radius)
 
         # Then the icons
         img_size = 50
@@ -464,18 +466,18 @@ class Card:
         # Draw the border line around the card
         border_w = w - 2 * Card.buffer
         border_h = h - 2 * Card.buffer
-        draw_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, corner_radius = 2, line_width = Card.line_width, fill = True)
+        draw_rectangle(cr, Card.buffer, Card.buffer, border_w, border_h, corner_radius = Card.buffer_radius, line_width = Card.line_width, fill = True)
         
         # Draw the header box for the text
-        header_x = Card.padding
-        header_y = Card.padding
-        header_w = w - Card.padding * 2 - Card.box_w
-        header_h = h / 14
+        header_x = Card.buffer + Card.outer_padding
+        header_y = Card.buffer + Card.outer_padding
+        header_w = border_w - Card.outer_padding * 2 - Card.box_w
+        header_h = border_h / 14
         self.__draw_header_text(cr, header_x, header_y, header_w, header_h)
            
         # Set up layout for all image panels
         ImagePanel.width = header_w
-        ImagePanel.height = h * 4 / 7
+        ImagePanel.height = border_h * 4 / 7
         ImagePanel.corner_radius = Card.corner_radius
         ImagePanel.shield_padding = Card.padding
         ImagePanel.line_width = Card.line_width    
@@ -486,27 +488,27 @@ class Card:
         
         # Draw the boxes on the right side of the card
         cr.save()
-        box_h = (imagebox_y + ImagePanel.height + Card.padding) / 6
-        cr.translate(w - Card.box_w, 0)
+        box_h = (ImagePanel.height + header_h + Card.padding * 2) / 6
+        cr.translate(Card.buffer + border_w - Card.box_w - Card.outer_padding + Card.padding, Card.outer_padding)
 
-        StatBox.box_width = Card.box_w
+        StatBox.box_width = Card.box_w - Card.padding
         StatBox.box_height = box_h
         StatBox.padding = 20
 
         self.__draw_boxes(cr)
 
         # We want the indicator box to be below all the stats and centered in the column
-        indicator_y = box_h * 5 + Card.padding
         indicator_size = box_h - Card.padding * 2
-        self.__draw_slot_indicator(cr, Card.box_w - indicator_size - Card.padding * 2, indicator_y, indicator_size)
+        indicator_x = Card.box_w - indicator_size - Card.padding * 2
+        indicator_y = Card.buffer + box_h * 5 + Card.padding
+        self.__draw_slot_indicator(cr, indicator_x, indicator_y, indicator_size)
 
         cr.restore()
-
 
         # Draw the description box below the image
         descbox_x = imagebox_x
         descbox_y = imagebox_y + ImagePanel.height + Card.padding
-        descbox_w = w - Card.padding * 2
+        descbox_w = border_w - Card.outer_padding * 2
         descbox_h = Card.desc_h
 
         self.__draw_description_text(cr, descbox_x, descbox_y, descbox_w, descbox_h)
@@ -515,7 +517,7 @@ class Card:
         detail_x = descbox_x
         detail_y = descbox_y + descbox_h + Card.padding
         detail_w = descbox_w
-        detail_h = h - detail_y - Card.padding
+        detail_h = (h - Card.buffer) - detail_y - Card.outer_padding
         draw_rectangle(cr, detail_x, detail_y, detail_w, detail_h, corner_radius = Card.corner_radius, line_width = Card.line_width)
 
         # Move to the upper left corner where the text will start
